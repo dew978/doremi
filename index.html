@@ -78,6 +78,20 @@ button{font:inherit;color:inherit}
 .tname strong{font-size:16px}
 .tname span{font-size:13px;color:var(--ink-2);margin-left:6px}
 input[type="range"]{width:100%;accent-color:var(--accent);margin:0}
+.tempo-terms{display:flex;flex-wrap:wrap;gap:8px 14px}
+.tgroup{display:flex;flex-direction:column;gap:4px}
+.tgroup > span{font-size:12px;font-weight:700;color:var(--ink-2)}
+.tgroup > div{display:flex;flex-wrap:wrap;gap:4px}
+.chip{border:1px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:9px;padding:4px 9px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
+.chip b{font-size:13px}
+.chip small{font-size:11px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.chip:hover{border-color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.chip[aria-pressed="true"] small{color:inherit;opacity:.75}
+.field{display:flex;align-items:center;gap:10px}
+.field label{font-weight:700;font-size:14px}
+.field select{flex:1;min-width:0;font:inherit;font-size:15px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink);cursor:pointer}
+.field select:hover{border-color:var(--ink-2)}
 
 /* 3 음표 놓기 */
 .compose-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
@@ -192,7 +206,25 @@ body.cover-open{overflow:hidden}
 
   <section class="setup">
     <div class="panel">
-      <h2><span class="num">1</span>박자</h2>
+      <h2><span class="num">1</span>조와 박자</h2>
+      <div class="field">
+        <label for="keySel">조</label>
+        <select id="keySel">
+          <optgroup label="장조">
+            <option value="C">다장조 (C major)</option>
+            <option value="G">사장조 (G major)</option>
+            <option value="D">라장조 (D major)</option>
+            <option value="F">바장조 (F major)</option>
+            <option value="Bb">내림나장조 (B♭ major)</option>
+          </optgroup>
+          <optgroup label="단조">
+            <option value="Am">가단조 (A minor)</option>
+            <option value="Em">마단조 (E minor)</option>
+            <option value="Dm">라단조 (D minor)</option>
+          </optgroup>
+        </select>
+      </div>
+      <p class="sub" id="keyDesc"></p>
       <div class="meters" id="meters" role="radiogroup" aria-label="박자"></div>
       <p class="sub" id="meterDesc"></p>
       <div class="confirm" id="meterConfirm" hidden>
@@ -205,9 +237,11 @@ body.cover-open{overflow:hidden}
       <h2><span class="num">2</span>빠르기</h2>
       <div class="tempo-read">
         <span class="bpm-big"><svg viewBox="0 0 18 34" aria-hidden="true"><ellipse cx="7" cy="27" rx="5.6" ry="4" transform="rotate(-22 7 27)" fill="currentColor"/><line x1="12" y1="26" x2="12" y2="2" stroke="currentColor" stroke-width="1.8"/></svg>=<output id="bpmOut" for="bpm">96</output></span>
-        <span class="tname"><strong id="tempoKo">보통 빠르게</strong><span id="tempoIt">Moderato</span></span>
+        <span class="tname"><strong id="tempoKo">보통 빠르기</strong><span id="tempoIt">Moderato</span></span>
       </div>
-      <input type="range" id="bpm" min="40" max="180" step="1" value="96" aria-label="빠르기: 1분에 4분음표 몇 번">
+      <div class="tempo-terms" id="tempoTerms"></div>
+      <input type="range" id="bpm" min="40" max="200" step="1" value="96" aria-label="빠르기: 1분에 4분음표 몇 번">
+      <p class="sub">빠르기말을 누르면 그 기준에 맞춰지고, 슬라이더로 자유롭게 바꿀 수도 있어요.</p>
     </div>
   </section>
 
@@ -280,12 +314,35 @@ const DURS = [
   {u:1, vf:'16',dots:0,note:'16분음표',rest:'16분쉼표'}
 ];
 const DUR = Object.fromEntries(DURS.map(d=>[d.u,d]));
-function tempoName(b){
-  if(b<56) return ['아주 느리게','Largo']; if(b<73) return ['느리게','Adagio'];
-  if(b<88) return ['조금 느리게','Andante']; if(b<104) return ['보통 빠르게','Moderato'];
-  if(b<122) return ['조금 빠르게','Allegretto']; if(b<152) return ['빠르게','Allegro'];
-  return ['아주 빠르게','Presto'];
+// Tempo terms and their ♩ ranges; v = the value a term button sets
+const TEMPO_GROUPS = [
+  {ko:'매우 느리게', terms:[{it:'Largo',kr:'라르고',lo:40,hi:60,v:48}, {it:'Lento',kr:'렌토',lo:45,hi:60,v:54}]},
+  {ko:'느리게',     terms:[{it:'Adagio',kr:'아다지오',lo:60,hi:70,v:66}, {it:'Andante',kr:'안단테',lo:52,hi:60,v:56,note:'걷는 속도'}]},
+  {ko:'보통 빠르기', terms:[{it:'Moderato',kr:'모데라토',lo:80,hi:116,v:96}]},
+  {ko:'빠르게',     terms:[{it:'Allegro',kr:'알레그로',lo:116,hi:144,v:130}]},
+  {ko:'매우 빠르게', terms:[{it:'Presto',kr:'프레스토',lo:144,hi:200,v:168,hiLabel:'184 이상'}]}
+];
+const TERMS = TEMPO_GROUPS.flatMap(g=>g.terms.map(t=>Object.assign({group:g.ko}, t)));
+const termOf = it => TERMS.find(t=>t.it===it);
+// Keep the chosen term while the tempo stays inside its range; otherwise pick the closest term that covers it
+function termFor(bpm, current){
+  const cur = termOf(current);
+  if(cur && bpm>=cur.lo && bpm<=cur.hi) return cur.it;
+  const fits = TERMS.filter(t=>bpm>=t.lo && bpm<=t.hi);
+  if(!fits.length) return null;
+  return fits.reduce((a,b)=>Math.abs(b.v-bpm)<Math.abs(a.v-bpm)?b:a).it;
 }
+// Keys: sig = accidentals the key signature puts on each letter
+const KEYS = {
+  C: {name:'다장조',   tonic:'c/4', sig:{}},
+  G: {name:'사장조',   tonic:'g/4', sig:{f:'#'}},
+  D: {name:'라장조',   tonic:'d/4', sig:{f:'#',c:'#'}},
+  F: {name:'바장조',   tonic:'f/4', sig:{b:'b'}},
+  Bb:{name:'내림나장조',tonic:'bb/4',sig:{b:'b',e:'b'}},
+  Am:{name:'가단조',   tonic:'a/4', sig:{}},
+  Em:{name:'마단조',   tonic:'e/4', sig:{f:'#'}},
+  Dm:{name:'라단조',   tonic:'d/4', sig:{b:'b'}}
+};
 const INSTS = [
   {id:'piano',name:'피아노',color:'var(--c-piano)'},
   {id:'recorder',name:'리코더',color:'var(--c-recorder)'}
@@ -296,7 +353,25 @@ function keyToMidi(k){
   return (+oct+1)*12 + PC[nm[0]] + (acc==='#'?1:acc==='b'?-1:0);
 }
 const diOfKey = k => { const [nm,oct] = k.split('/'); return (+oct)*7 + LET.indexOf(nm[0]); };
-const keyOfDi = (di, acc) => LET[di%7] + (acc||'') + '/' + Math.floor(di/7);
+// With no accidental given, a note follows the key signature (e.g. F becomes F♯ in G major); '' means natural
+const keyOfDi = (di, acc) => {
+  const l = LET[di%7];
+  if(acc===undefined) acc = KEYS[S.key].sig[l] || '';
+  return l + acc + '/' + Math.floor(di/7);
+};
+// Chords: a note keeps its main pitch in n.k/n.m and up to two added tones in n.x; all share the note's length
+const MAX_CHORD = 3;
+const pitchesOf = n => n.m==null ? [] : [{k:n.k, m:n.m}, ...(n.x||[])];
+function setPitch(n, v, k){
+  const m = keyToMidi(k);
+  if(v===0){ n.k = k; n.m = m; } else n.x[v-1] = {k, m};
+}
+function removePitch(n, v){
+  const ps = pitchesOf(n); ps.splice(v,1);
+  n.k = ps[0].k; n.m = ps[0].m; n.x = ps.slice(1);
+  if(!n.x.length) delete n.x;
+}
+const chordName = n => pitchesOf(n).sort((a,b)=>a.m-b.m).map(p=>nameOf(p.k)).join('·');
 const accOf = k => k.split('/')[0].slice(1);
 const accSym = k => ({'#':'♯','b':'♭'})[accOf(k)] || '';
 const nameOf = k => NAMES[k[0]] + accSym(k);
@@ -311,7 +386,7 @@ function beats(u){
 
 /* ---------- state (always starts with an empty score) ---------- */
 const emptyBars = () => Array.from({length:8},()=>[]);
-const S = {meter:'4/4', bpm:96, bars:emptyBars(), inst:'piano', metro:false, drums:false};
+const S = {key:'C', meter:'4/4', bpm:96, term:'Moderato', bars:emptyBars(), inst:'piano', metro:false, drums:false};
 // Basic beat per meter, on the 16th-note grid: K = kick, S = snare, H = hi-hat (accented hat = h)
 const DRUMS = {
   '2/4': {K:[0],      S:[4],     H:[0,2,4,6]},
@@ -328,14 +403,15 @@ const history = [];
 const cap = () => METERS[S.meter].cap;
 const used = b => S.bars[b].reduce((a,n)=>a+n.d,0);
 function snapshot(){
-  history.push(JSON.stringify({meter:S.meter,bars:S.bars}));
+  history.push(JSON.stringify({key:S.key,meter:S.meter,bars:S.bars}));
   if(history.length>150) history.shift();
 }
 function commit(){ stop(); refresh(); }
 
 const el = {
   meters:$('#meters'), meterDesc:$('#meterDesc'), meterConfirm:$('#meterConfirm'), meterConfirmText:$('#meterConfirmText'),
-  bpm:$('#bpm'), bpmOut:$('#bpmOut'), tempoKo:$('#tempoKo'), tempoIt:$('#tempoIt'),
+  bpm:$('#bpm'), bpmOut:$('#bpmOut'), tempoKo:$('#tempoKo'), tempoIt:$('#tempoIt'), tempoTerms:$('#tempoTerms'),
+  keySel:$('#keySel'), keyDesc:$('#keyDesc'),
   palette:$('#palette'), score:$('#score'), paper:$('#paper'), hint:$('#hint'), floater:$('#floater'),
   insts:$('#insts'), playBtn:$('#playBtn'), metro:$('#metro'), drums:$('#drums'), progBar:$('#progBar'), playPos:$('#playPos'), toast:$('#toast')
 };
@@ -393,15 +469,15 @@ function svgEl(parent, tag, attrs, text){
 }
 let modCache = {};
 function modWidths(){
-  if(modCache.meter===S.meter) return modCache;
+  if(modCache.meter===S.meter && modCache.key===S.key) return modCache;
   let e0 = 72, eN = 40, pad = 24;
   try{
     const plain = new VF.Stave(0,0,300), base = plain.getNoteStartX();
     pad = base + (300 - plain.getNoteEndX());
-    eN = new VF.Stave(0,0,300).addClef('treble').getNoteStartX() - base;
-    e0 = new VF.Stave(0,0,300).addClef('treble').addTimeSignature(S.meter).getNoteStartX() - base;
+    eN = new VF.Stave(0,0,300).addClef('treble').addKeySignature(S.key).getNoteStartX() - base;
+    e0 = new VF.Stave(0,0,300).addClef('treble').addKeySignature(S.key).addTimeSignature(S.meter).getNoteStartX() - base;
   }catch(e){}
-  return modCache = {meter:S.meter, e0, eN, pad};
+  return modCache = {meter:S.meter, key:S.key, e0, eN, pad};
 }
 function buildVoice(b, C, stave){
   const M = METERS[S.meter];
@@ -409,7 +485,7 @@ function buildVoice(b, C, stave){
   const voice = new VF.Voice({num_beats:M.num, beat_value:M.den});
   voice.setMode((VF.Voice.Mode && VF.Voice.Mode.SOFT) || 2);
   voice.addTickables(notes);
-  try{ VF.Accidental.applyAccidentals([voice],'C'); }catch(e){}
+  try{ VF.Accidental.applyAccidentals([voice], S.key); }catch(e){}
   return {notes, voice};
 }
 // Width the notes of bar b need so they never run past the barline (0 for an empty bar).
@@ -441,15 +517,20 @@ function attachDot(sn){
 }
 function makeNote(n, b, i, C, stave){
   const D = DUR[n.d], rest = n.m==null;
+  // VexFlow wants chord keys from low to high; remember each key's slot in the note (i) for highlighting
+  const ps = pitchesOf(n).map((p,j)=>({k:p.k, m:p.m, j})).sort((a,c)=>diOfKey(a.k)-diOfKey(c.k) || a.m-c.m);
   const sn = new VF.StaveNote({
-    keys: rest ? [D.u>=16 ? 'd/5' : 'b/4'] : [n.k],
+    keys: rest ? [D.u>=16 ? 'd/5' : 'b/4'] : ps.map(p=>p.k),
     duration: D.vf + (D.dots?'d':'') + (rest?'r':''),
     auto_stem: !rest, clef:'treble'
   });
   if(D.dots) attachDot(sn);
-  const on = (sel && sel.bar===b && sel.idx===i) || (playing && playing.bar===b && playing.idx===i);
-  const col = on ? C.accent : C.ink;
+  const isSel = sel && sel.bar===b && sel.idx===i;
+  const isPlay = playing && playing.bar===b && playing.idx===i;
+  const chordSel = isSel && ps.length>1 && !!sn.setKeyStyle;   // in a chord only the chosen tone lights up
+  const col = (isPlay || (isSel && !chordSel)) ? C.accent : C.ink;
   sn.setStyle({fillStyle:col, strokeStyle:col});
+  if(chordSel){ const h = ps.findIndex(p=>p.j===(sel.v||0)); if(h>=0) sn.setKeyStyle(h, {fillStyle:C.accent, strokeStyle:C.accent}); }
   if(sn.setLedgerLineStyle) sn.setLedgerLineStyle({fillStyle:col, strokeStyle:col, lineWidth:1.3});
   sn.setStave(stave);
   return sn;
@@ -516,7 +597,7 @@ function render(){
     const {r, c, x, w} = layout[b];
     const rowTop = r*ROWH;
     const stave = new VF.Stave(x, rowTop + TOPLINE - 40, w);
-    if(c===0) stave.addClef('treble');
+    if(c===0) stave.addClef('treble').addKeySignature(S.key);
     if(b===0) stave.addTimeSignature(S.meter);
     if(c!==0 && BT) stave.setBegBarType(BT.NONE);
     if(b===7 && BT) stave.setEndBarType(BT.END);
@@ -564,7 +645,27 @@ function drawGhost(t){
   const hb = hit.bars[t.b]; if(!hb) return;
   svgEl(ghostLayer,'rect',{x:hb.x+1,y:hb.top-34,width:hb.w-1,height:hb.bot-hb.top+64,rx:6,class:'ghost-bar'});
   const g = svgEl(ghostLayer,'g',{class:'ghost'+(t.ok?'':' bad')});
-  const gx = hb.endX;
+  let gx = hb.endX;
+  const ledgersAt = (di, x) => {
+    const ys = [];
+    if(di<=28) ys.push(hb.top+50);
+    for(let d=40; d<=di; d+=2) ys.push(hb.top-(d-38)*5);
+    ys.forEach(y=>svgEl(g,'line',{x1:x-3,y1:y,x2:x+15,y2:y}));
+  };
+  if(t.chord!=null){
+    // stacking onto an existing note: show just the new notehead on that note
+    const n = S.bars[t.b][t.chord], vf = DUR[n.d].vf;
+    gx = hit.notes[t.b][t.chord];
+    const gy = hb.top + (DI_TOP - t.di)*5;
+    ledgersAt(t.di, gx);
+    const hollow = vf==='h' || vf==='w';
+    svgEl(g,'ellipse',{cx:gx+6,cy:gy,rx:6,ry:4.3,transform:`rotate(-22 ${gx+6} ${gy})`,
+      fill:hollow?'none':'currentColor', stroke:'currentColor','stroke-width':hollow?2:0});
+    const k = keyOfDi(t.di);
+    svgEl(g,'text',{x:gx+20,y:gy-8}, t.ok ? `${nameOf(k)} 화음 추가 (${pitchesOf(n).length+1}/${MAX_CHORD})`
+      : t.why==='full' ? `화음은 ${MAX_CHORD}개까지` : '이미 있는 음');
+    return;
+  }
   if(t.rest){
     const n = svgEl(g,'svg',{x:gx-10,y:hb.top-4,width:34,height:48,viewBox:'0 0 34 48'});
     n.innerHTML = iconInner(t.u,true);
@@ -572,11 +673,7 @@ function drawGhost(t){
     return;
   }
   const gy = hb.top + (DI_TOP - t.di)*5;
-  // ledger lines for C4 and for A5 and above
-  const ledgers = [];
-  if(t.di<=28) ledgers.push(hb.top+50);
-  for(let d=40; d<=t.di; d+=2) ledgers.push(hb.top-(d-38)*5);
-  ledgers.forEach(y=>svgEl(g,'line',{x1:gx-3,y1:y,x2:gx+15,y2:y}));
+  ledgersAt(t.di, gx);
   const whole = DUR[t.u].vf==='w';
   const n = svgEl(g,'svg',{x:whole?gx-9:gx-7.5,y:gy-(whole?28:36),width:34,height:48,viewBox:'0 0 34 48'});
   n.innerHTML = iconInner(t.u,false);
@@ -593,7 +690,17 @@ const diAt = (hb, y) => clamp(DI_TOP - Math.round((y - hb.top)/5), DI_MIN, DI_MA
 function targetAt(e, u, rest){
   const p = svgPoint(e), hb = barAt(p);
   if(!hb) return null;
-  return {b:hb.b, di:diAt(hb,p.y), u, rest, ok: used(hb.b)+u <= cap()};
+  const di = diAt(hb, p.y);
+  if(!rest){
+    // dropped onto an existing note → add a chord tone (the chord keeps that note's length)
+    const ni = noteAt(hb, p), n = ni>=0 ? S.bars[hb.b][ni] : null;
+    if(n && n.m!=null){
+      const ps = pitchesOf(n), m = keyToMidi(keyOfDi(di));
+      const why = ps.length>=MAX_CHORD ? 'full' : ps.some(q=>q.m===m) ? 'dup' : '';
+      return {b:hb.b, di, u, rest, chord:ni, ok:!why, why};
+    }
+  }
+  return {b:hb.b, di, u, rest, ok: used(hb.b)+u <= cap()};
 }
 function noteAt(hb, p){
   const xs = hit.notes[hb.b] || []; let best = -1, bd = 1e9;
@@ -602,6 +709,16 @@ function noteAt(hb, p){
 }
 function place(t){
   if(!t) return;
+  if(t.chord!=null){
+    const n = S.bars[t.b][t.chord];
+    if(!t.ok){ toast(t.why==='full' ? `화음은 음 ${MAX_CHORD}개까지만 쌓을 수 있어요` : '이미 있는 음이에요'); return; }
+    snapshot();
+    const k = keyOfDi(t.di);
+    (n.x = n.x || []).push({k, m:keyToMidi(k)});
+    preview(pitchesOf(n).map(q=>q.m), n.d);
+    sel = null;
+    commit(); return;
+  }
   if(!t.ok){ toast(`${t.b+1}마디에는 ${DUR[t.u][t.rest?'rest':'note']}가 들어갈 자리가 없어요`); return; }
   snapshot();
   if(t.rest) S.bars[t.b].push({m:null, d:t.u});
@@ -618,8 +735,8 @@ function paletteClick(u){
     if(used(sel.bar) - n.d + u > cap()){ toast('그 길이는 이 마디에 자리가 모자라요'); return; }
     snapshot();
     n.d = u;
-    if(rest && n.m!=null){ n.m = null; delete n.k; }
-    else if(!rest && n.m==null){ n.k = 'b/4'; n.m = keyToMidi('b/4'); }
+    if(rest && n.m!=null){ n.m = null; delete n.k; delete n.x; }
+    else if(!rest && n.m==null){ n.k = keyOfDi(diOfKey('b/4')); n.m = keyToMidi(n.k); }
     commit(); return;
   }
   tool = (tool && tool.u===u && tool.rest===rest) ? null : {u, rest};
@@ -643,10 +760,14 @@ el.score.addEventListener('pointerdown', e=>{
   const ni = noteAt(hb, p);
   if(ni>=0){
     e.preventDefault();
-    sel = {bar:hb.b, idx:ni};
-    const n = S.bars[hb.b][ni];
-    if(n.m!=null) preview(n.m);
-    drag = {kind:'note', bar:hb.b, idx:ni, sy:e.clientY, moved:false, lastDi: n.m!=null ? diOfKey(n.k) : null};
+    const n = S.bars[hb.b][ni], ps = pitchesOf(n);
+    // in a chord, pick the tone nearest to where the pointer went down
+    const yOf = q => hb.top + (DI_TOP - diOfKey(q.k))*5;
+    let v = 0;
+    ps.forEach((q,i)=>{ if(Math.abs(yOf(q)-p.y) < Math.abs(yOf(ps[v])-p.y)) v = i; });
+    sel = {bar:hb.b, idx:ni, v};
+    if(ps.length) preview(ps.map(q=>q.m));
+    drag = {kind:'note', bar:hb.b, idx:ni, v, sy:e.clientY, moved:false, lastDi: ps.length ? diOfKey(ps[v].k) : null};
   } else sel = null;
   refresh();
 });
@@ -675,9 +796,9 @@ document.addEventListener('pointermove', e=>{
     if(di===drag.lastDi) return;
     if(!drag.moved){ drag.moved = true; snapshot(); }
     drag.lastDi = di;
-    const n = S.bars[drag.bar][drag.idx];
-    n.k = keyOfDi(di); n.m = keyToMidi(n.k);
-    preview(n.m, 0, 0.25);
+    const n = S.bars[drag.bar][drag.idx], k = keyOfDi(di);
+    setPitch(n, drag.v, k);
+    preview(keyToMidi(k), 0, 0.25);
     refresh();
   }
 });
@@ -699,34 +820,61 @@ document.addEventListener('pointerup', e=>endDrag(e,false));
 document.addEventListener('pointercancel', e=>endDrag(e,true));
 
 /* ---------- selected-note actions ---------- */
+// The selected tone: the note itself, or the chosen tone of a chord
+function selTone(){
+  const n = sel && S.bars[sel.bar][sel.idx]; if(!n || n.m==null) return null;
+  const ps = pitchesOf(n), v = Math.min(sel.v||0, ps.length-1);
+  return {n, v, p:ps[v]};
+}
 function moveSel(step){
-  const n = sel && S.bars[sel.bar][sel.idx]; if(!n || n.m==null) return;
-  const di = clamp(diOfKey(n.k)+step, DI_MIN, DI_MAX);
-  snapshot(); n.k = keyOfDi(di); n.m = keyToMidi(n.k); preview(n.m); commit();
+  const s = selTone(); if(!s) return;
+  const k = keyOfDi(clamp(diOfKey(s.p.k)+step, DI_MIN, DI_MAX));
+  snapshot(); setPitch(s.n, s.v, k); preview(keyToMidi(k)); commit();
 }
 function setAcc(a){
-  const n = sel && S.bars[sel.bar][sel.idx]; if(!n || n.m==null) return;
-  snapshot(); n.k = keyOfDi(diOfKey(n.k), a); n.m = keyToMidi(n.k); preview(n.m); commit();
+  const s = selTone(); if(!s) return;
+  const k = keyOfDi(diOfKey(s.p.k), a);
+  snapshot(); setPitch(s.n, s.v, k); preview(keyToMidi(k)); commit();
 }
-function deleteSel(){
+// whole=false on a chord removes only the chosen tone
+function deleteSel(whole){
   if(!sel) return;
-  snapshot(); S.bars[sel.bar].splice(sel.idx,1); sel = null; commit();
+  const s = selTone();
+  snapshot();
+  if(!whole && s && pitchesOf(s.n).length>1){ removePitch(s.n, s.v); sel.v = 0; }
+  else { S.bars[sel.bar].splice(sel.idx,1); sel = null; }
+  commit();
 }
 el.hint.addEventListener('click', e=>{
   const b = e.target.closest('[data-act]'); if(!b) return;
   const a = b.dataset.act;
   if(a==='up') moveSel(1); else if(a==='down') moveSel(-1);
   else if(a==='sharp') setAcc('#'); else if(a==='flat') setAcc('b'); else if(a==='nat') setAcc('');
-  else if(a==='del') deleteSel();
+  else if(a==='del') deleteSel(true);
+  else if(a==='deltone') deleteSel(false);
   else if(a==='drop'){ tool = null; refresh(); }
   else if(a==='desel'){ sel = null; refresh(); }
 });
 function undo(){
   const h = history.pop(); if(!h){ toast('더 되돌릴 것이 없어요'); return; }
-  const o = JSON.parse(h); S.meter = o.meter; S.bars = o.bars; sel = null; modCache = {};
+  const o = JSON.parse(h); S.key = o.key || 'C'; S.meter = o.meter; S.bars = o.bars; sel = null; modCache = {};
   commit();
 }
 function setMeter(m){ snapshot(); S.meter = m; S.bars = emptyBars(); sel = null; modCache = {}; commit(); }
+// Changing the key re-reads written notes against the new key signature; notes with their own accidental keep it
+function setKey(k){
+  if(k===S.key || !KEYS[k]) return;
+  snapshot();
+  const oldSig = KEYS[S.key].sig, newSig = KEYS[k].sig;
+  S.bars.forEach(bar=>bar.forEach(n=>{
+    pitchesOf(n).forEach((p,v)=>{
+      const l = p.k[0];
+      if(accOf(p.k)===(oldSig[l]||'')) setPitch(n, v, l + (newSig[l]||'') + '/' + p.k.split('/')[1]);
+    });
+  }));
+  S.key = k; modCache = {};
+  commit();
+}
 let toastT;
 function toast(msg){
   el.toast.textContent = msg; el.toast.hidden = false;
@@ -738,8 +886,22 @@ function refresh(){
   render();
   el.meters.querySelectorAll('.meter').forEach(b=>b.setAttribute('aria-checked', String(b.dataset.meter===S.meter)));
   el.meterDesc.textContent = `${S.meter}박자 — ${METERS[S.meter].desc}`;
+  el.keySel.value = S.key;
+  const K = KEYS[S.key], sigL = Object.keys(K.sig);
+  const sigText = sigL.length
+    ? `조표 ${K.sig[sigL[0]]==='#'?'♯':'♭'} ${sigL.length}개 (${sigL.map(l=>NAMES[l]).join(', ')})`
+    : '조표 없음';
+  el.keyDesc.textContent = `으뜸음 ${nameOf(K.tonic)} · ${sigText} · 으뜸음으로 끝내면 가락이 안정감 있게 끝나요`;
   el.bpm.value = S.bpm; el.bpmOut.textContent = S.bpm;
-  const [ko,it] = tempoName(S.bpm); el.tempoKo.textContent = ko; el.tempoIt.textContent = it;
+  const T = termOf(S.term);
+  if(T){
+    el.tempoKo.textContent = T.group;
+    el.tempoIt.textContent = `${T.it} (${T.kr}) · ${T.lo}~${T.hiLabel || T.hi}` + (T.note ? ` · ${T.note}` : '');
+  } else {
+    el.tempoKo.textContent = '느리게와 보통 빠르기 사이';
+    el.tempoIt.textContent = '정해진 빠르기말이 없는 구간이에요';
+  }
+  el.tempoTerms.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', String(c.dataset.it===S.term)));
   $('#kindNote').setAttribute('aria-pressed', String(kind==='note'));
   $('#kindRest').setAttribute('aria-pressed', String(kind==='rest'));
   el.palette.querySelectorAll('.pal').forEach(btn=>{
@@ -757,16 +919,21 @@ function refresh(){
   el.paper.classList.toggle('grab', !!(tool || sel));
   let h;
   if(sel){
-    const n = S.bars[sel.bar][sel.idx];
-    const what = n.m==null ? DUR[n.d].rest : `${nameOf(n.k)} ${codeOf(n.k)} · ${DUR[n.d].note}`;
+    const n = S.bars[sel.bar][sel.idx], s = selTone(), chord = pitchesOf(n).length>1;
+    const what = n.m==null ? DUR[n.d].rest
+      : chord ? `화음 ${chordName(n)} · ${DUR[n.d].note} → 고른 음 ${nameOf(s.p.k)} ${codeOf(s.p.k)}`
+      : `${nameOf(n.k)} ${codeOf(n.k)} · ${DUR[n.d].note}`;
     h = `<strong>${sel.bar+1}마디: ${what}</strong>`;
     if(n.m!=null) h += `<button class="btn" data-act="up" type="button" aria-label="한 칸 위로">▲</button><button class="btn" data-act="down" type="button" aria-label="한 칸 아래로">▼</button><button class="btn" data-act="sharp" type="button">♯</button><button class="btn" data-act="flat" type="button">♭</button><button class="btn" data-act="nat" type="button">♮</button>`;
-    h += `<button class="btn" data-act="del" type="button">지우기</button><button class="btn" data-act="desel" type="button">완료</button>`;
+    h += chord
+      ? `<button class="btn" data-act="deltone" type="button">이 음 빼기</button><button class="btn" data-act="del" type="button">화음 지우기</button>`
+      : `<button class="btn" data-act="del" type="button">지우기</button>`;
+    h += `<button class="btn" data-act="desel" type="button">완료</button>`;
   } else if(tool){
     const D = DUR[tool.u];
     h = `<strong>${tool.rest?D.rest:D.note}</strong>를 들고 있어요. 악보에서 원하는 높이를 누르면 놓여요. <button class="btn" data-act="drop" type="button">내려놓기</button>`;
   } else {
-    h = '위의 음표를 <strong>악보로 끌어다 놓으세요</strong>. 놓는 높이가 음 높이예요. 놓은 음은 눌러서 고치거나 위아래로 끌 수 있어요.';
+    h = '위의 음표를 <strong>악보로 끌어다 놓으세요</strong>. 놓는 높이가 음 높이예요. 놓은 음 위에 겹쳐 놓으면 <strong>화음</strong>이 돼요(3개까지). 놓은 음은 눌러서 고치거나 위아래로 끌 수 있어요.';
   }
   el.hint.innerHTML = h;
   $('#undoBtn').disabled = !history.length;
@@ -790,7 +957,14 @@ el.meters.addEventListener('click', e=>{
 });
 $('#meterYes').onclick = ()=>{ if(pendingMeter) setMeter(pendingMeter); pendingMeter = null; el.meterConfirm.hidden = true; };
 $('#meterNo').onclick = ()=>{ pendingMeter = null; el.meterConfirm.hidden = true; };
-el.bpm.addEventListener('input', ()=>{ S.bpm = +el.bpm.value; stop(); refresh(); });
+el.bpm.addEventListener('input', ()=>{ S.bpm = +el.bpm.value; S.term = termFor(S.bpm, S.term); stop(); refresh(); });
+el.tempoTerms.innerHTML = TEMPO_GROUPS.map(g=>`<div class="tgroup"><span>${g.ko}</span><div>${g.terms.map(t=>
+  `<button type="button" class="chip" data-it="${t.it}" aria-pressed="false" title="${t.kr}${t.note?' · '+t.note:''}"><b>${t.it}</b><small>${t.lo}~${t.hiLabel || t.hi}</small></button>`).join('')}</div></div>`).join('');
+el.tempoTerms.addEventListener('click', e=>{
+  const c = e.target.closest('.chip'); if(!c) return;
+  const t = termOf(c.dataset.it); S.term = t.it; S.bpm = t.v; stop(); refresh();
+});
+el.keySel.addEventListener('change', ()=>setKey(el.keySel.value));
 $('#kindNote').onclick = ()=>{ kind = 'note'; if(tool) tool = null; refresh(); };
 $('#kindRest').onclick = ()=>{ kind = 'rest'; if(tool) tool = null; refresh(); };
 el.palette.addEventListener('keydown', e=>{
@@ -810,7 +984,7 @@ el.playBtn.onclick = ()=>{ playState ? stop() : play(); };
 document.addEventListener('keydown', e=>{
   const t = e.target; if(t && t.tagName==='INPUT') return;
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); undo(); }
-  else if(sel && (e.key==='Delete'||e.key==='Backspace')){ e.preventDefault(); deleteSel(); }
+  else if(sel && (e.key==='Delete'||e.key==='Backspace')){ e.preventDefault(); deleteSel(false); }
   else if(sel && e.key==='ArrowUp'){ e.preventDefault(); moveSel(1); }
   else if(sel && e.key==='ArrowDown'){ e.preventDefault(); moveSel(-1); }
   else if(e.key==='Escape'){ sel = null; tool = null; drawGhost(null); refresh(); }
@@ -983,11 +1157,14 @@ function scheduleDrums(dest, t0, lengthU, s){
   }
 }
 const sixteenth = () => 60 / S.bpm / 4;
+// Several simultaneous tones share one gain so a chord is not louder than it should be
+function chordBus(dest, count){ return count>1 ? gainNode(1/Math.sqrt(count), dest) : dest; }
 function preview(m, u, len){
   ensureAudio();
   const t = ac.currentTime + 0.02;
   const l = len || (u ? Math.min(0.9, u*sixteenth()) : 0.45);
-  INSTR[S.inst](master, mtof(m), t, t + Math.max(0.12, l));
+  const ms = Array.isArray(m) ? m : [m], dest = chordBus(master, ms.length);
+  ms.forEach(x=>INSTR[S.inst](dest, mtof(x), t, t + Math.max(0.12, l)));
 }
 
 /* ---------- playback ---------- */
@@ -1009,7 +1186,8 @@ async function play(){
     let u = 0;
     S.bars[b].forEach((n,i)=>{
       events.push({t:pos*s, end:(pos+n.d)*s, bar:b, idx:i});
-      if(n.m!=null) INSTR[S.inst](bus, mtof(n.m), t0 + pos*s, t0 + (pos+n.d)*s);
+      const ps = pitchesOf(n), dest = chordBus(bus, ps.length);
+      ps.forEach(q=>INSTR[S.inst](dest, mtof(q.m), t0 + pos*s, t0 + (pos+n.d)*s));
       pos += n.d; u += n.d;
     });
     if(u<CAP){ events.push({t:pos*s, end:(pos+CAP-u)*s, bar:b, idx:-1}); pos += CAP-u; }
