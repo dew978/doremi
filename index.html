@@ -89,7 +89,11 @@ input[type="range"]{width:100%;accent-color:var(--accent);margin:0}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
 .chip[aria-pressed="true"] small{color:inherit;opacity:.75}
 .field{display:flex;align-items:center;gap:10px}
-.field label{font-weight:700;font-size:14px}
+.field label,.field-label{font-weight:700;font-size:14px;flex:none}
+.barcounts{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.bc{border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:10px;padding:7px 4px;cursor:pointer;font-family:"Jua",sans-serif;font-size:17px;line-height:1.1}
+.bc:hover{border-color:var(--ink-2)}
+.bc[aria-checked="true"]{border-color:var(--accent);color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
 .field select{flex:1;min-width:0;font:inherit;font-size:15px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink);cursor:pointer}
 .field select:hover{border-color:var(--ink-2)}
 
@@ -190,7 +194,7 @@ body.cover-open{overflow:hidden}
     </g>
   </svg>
   <div class="cover-card">
-    <p class="cover-eyebrow">8마디 가락 짓기</p>
+    <p class="cover-eyebrow">4~16마디 가락 짓기</p>
     <p class="cover-title" id="coverTitle">도레미 작곡 공책</p>
     <p class="cover-sub">박자와 빠르기를 정하고, 음표를 놓아 나만의 가락을 만들어요.</p>
     <button class="start" id="startBtn" type="button"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M4 2.5v13l11-6.5z" fill="currentColor"/></svg>시작하기</button>
@@ -201,12 +205,12 @@ body.cover-open{overflow:hidden}
 <div class="wrap">
   <header class="top">
     <h1>도레미 작곡 공책</h1>
-    <p class="lede">박자와 빠르기를 정하고, 음표를 악보에 끌어다 놓아 8마디 가락을 만들어요.</p>
+    <p class="lede">박자와 빠르기를 정하고, 음표를 악보에 끌어다 놓아 나만의 가락을 만들어요.</p>
   </header>
 
   <section class="setup">
     <div class="panel">
-      <h2><span class="num">1</span>조와 박자</h2>
+      <h2><span class="num">1</span>조 · 박자 · 마디</h2>
       <div class="field">
         <label for="keySel">조</label>
         <select id="keySel">
@@ -227,6 +231,10 @@ body.cover-open{overflow:hidden}
       <p class="sub" id="keyDesc"></p>
       <div class="meters" id="meters" role="radiogroup" aria-label="박자"></div>
       <p class="sub" id="meterDesc"></p>
+      <div class="field">
+        <span class="field-label">마디 수</span>
+        <div class="barcounts" id="barCounts" role="radiogroup" aria-label="마디 수"></div>
+      </div>
       <div class="confirm" id="meterConfirm" hidden>
         <p id="meterConfirmText"></p>
         <button class="btn primary" id="meterYes" type="button">바꾸기</button>
@@ -385,8 +393,9 @@ function beats(u){
 }
 
 /* ---------- state (always starts with an empty score) ---------- */
-const emptyBars = () => Array.from({length:8},()=>[]);
-const S = {key:'C', meter:'4/4', bpm:96, term:'Moderato', bars:emptyBars(), inst:'piano', metro:false, drums:false};
+const BAR_CHOICES = [4, 8, 12, 16];
+const emptyBars = n => Array.from({length:n},()=>[]);
+const S = {key:'C', meter:'4/4', bpm:96, term:'Moderato', bars:emptyBars(8), inst:'piano', metro:false, drums:false};
 // Basic beat per meter, on the 16th-note grid: K = kick, S = snare, H = hi-hat (accented hat = h)
 const DRUMS = {
   '2/4': {K:[0],      S:[4],     H:[0,2,4,6]},
@@ -398,7 +407,7 @@ let kind = 'note';        // palette shows notes or rests
 let tool = null;          // armed palette item {u, rest}
 let sel = null;           // {bar, idx}
 let drag = null;
-let pendingMeter = null;
+let pendingAction = null;   // a change waiting for the inline confirm (meter change or fewer bars)
 const history = [];
 const cap = () => METERS[S.meter].cap;
 const used = b => S.bars[b].reduce((a,n)=>a+n.d,0);
@@ -411,7 +420,7 @@ function commit(){ stop(); refresh(); }
 const el = {
   meters:$('#meters'), meterDesc:$('#meterDesc'), meterConfirm:$('#meterConfirm'), meterConfirmText:$('#meterConfirmText'),
   bpm:$('#bpm'), bpmOut:$('#bpmOut'), tempoKo:$('#tempoKo'), tempoIt:$('#tempoIt'), tempoTerms:$('#tempoTerms'),
-  keySel:$('#keySel'), keyDesc:$('#keyDesc'),
+  keySel:$('#keySel'), keyDesc:$('#keyDesc'), barCounts:$('#barCounts'),
   palette:$('#palette'), score:$('#score'), paper:$('#paper'), hint:$('#hint'), floater:$('#floater'),
   insts:$('#insts'), playBtn:$('#playBtn'), metro:$('#metro'), drums:$('#drums'), progBar:$('#progBar'), playPos:$('#playPos'), toast:$('#toast')
 };
@@ -547,11 +556,12 @@ function render(){
   const M = METERS[S.meter], CAP = M.cap;
   const {e0, eN, pad} = modWidths();
   let W = Math.floor(Math.max(paperW, 150 + e0));
+  const NB = S.bars.length;
 
   // 1) how wide each bar has to be for its notes
   const dummy = new VF.Stave(0, 0, 2000);
   const areas = [], mins = [];
-  for(let b=0;b<8;b++){
+  for(let b=0;b<NB;b++){
     const a = noteArea(b, C, dummy);
     areas.push(a);
     // a half-filled bar keeps some room after its last note for the next one
@@ -560,7 +570,7 @@ function render(){
   }
   // 2) break into rows: up to bpr bars per row, fewer when crowded bars need the space
   const rows = []; let cur = [], curW = 0;
-  for(let b=0;b<8;b++){
+  for(let b=0;b<NB;b++){
     if(cur.length && (cur.length>=bpr || curW + mins[b] > W - 1)){
       rows.push(cur); cur = []; curW = 0;
     }
@@ -589,18 +599,18 @@ function render(){
   ctx.setFillStyle(C.ink); ctx.setStrokeStyle(C.ink);
   const svg = host.querySelector('svg');
   svg.setAttribute('role','img');
-  svg.setAttribute('aria-label', `${S.meter}박자 8마디 악보`);
+  svg.setAttribute('aria-label', `${S.meter}박자 ${NB}마디 악보`);
   const BT = VF.Barline.type || VF.BarlineType;
   hit = {bars:[], notes:[]};
 
-  for(let b=0;b<8;b++){
+  for(let b=0;b<NB;b++){
     const {r, c, x, w} = layout[b];
     const rowTop = r*ROWH;
     const stave = new VF.Stave(x, rowTop + TOPLINE - 40, w);
     if(c===0) stave.addClef('treble').addKeySignature(S.key);
     if(b===0) stave.addTimeSignature(S.meter);
     if(c!==0 && BT) stave.setBegBarType(BT.NONE);
-    if(b===7 && BT) stave.setEndBarType(BT.END);
+    if(b===NB-1 && BT) stave.setEndBarType(BT.END);
     stave.setStyle({strokeStyle:C.line, fillStyle:C.line});
     const top = stave.getYForLine(0), bot = stave.getYForLine(4);
     stave.setContext(ctx).draw();
@@ -860,7 +870,15 @@ function undo(){
   const o = JSON.parse(h); S.key = o.key || 'C'; S.meter = o.meter; S.bars = o.bars; sel = null; modCache = {};
   commit();
 }
-function setMeter(m){ snapshot(); S.meter = m; S.bars = emptyBars(); sel = null; modCache = {}; commit(); }
+function setMeter(m){ snapshot(); S.meter = m; S.bars = emptyBars(S.bars.length); sel = null; modCache = {}; commit(); }
+// More bars are added empty at the end; fewer bars drop the last ones
+function setBarCount(n){
+  if(n===S.bars.length) return;
+  snapshot();
+  S.bars = n > S.bars.length ? S.bars.concat(emptyBars(n - S.bars.length)) : S.bars.slice(0, n);
+  sel = null;
+  commit();
+}
 // Changing the key re-reads written notes against the new key signature; notes with their own accidental keep it
 function setKey(k){
   if(k===S.key || !KEYS[k]) return;
@@ -887,6 +905,7 @@ function refresh(){
   el.meters.querySelectorAll('.meter').forEach(b=>b.setAttribute('aria-checked', String(b.dataset.meter===S.meter)));
   el.meterDesc.textContent = `${S.meter}박자 — ${METERS[S.meter].desc}`;
   el.keySel.value = S.key;
+  el.barCounts.querySelectorAll('.bc').forEach(b=>b.setAttribute('aria-checked', String(+b.dataset.n===S.bars.length)));
   const K = KEYS[S.key], sigL = Object.keys(K.sig);
   const sigText = sigL.length
     ? `조표 ${K.sig[sigL[0]]==='#'?'♯':'♭'} ${sigL.length}개 (${sigL.map(l=>NAMES[l]).join(', ')})`
@@ -949,14 +968,24 @@ function refresh(){
 el.meters.addEventListener('click', e=>{
   const b = e.target.closest('.meter'); if(!b) return;
   const m = b.dataset.meter; if(m===S.meter){ el.meterConfirm.hidden = true; return; }
-  if(S.bars.some(x=>x.length)){
-    pendingMeter = m;
-    el.meterConfirmText.textContent = `${m}박자로 바꾸면 지금 쓴 악보가 지워져요. (되돌리기로 되살릴 수 있어요)`;
-    el.meterConfirm.hidden = false;
-  } else setMeter(m);
+  if(S.bars.some(x=>x.length)) askConfirm(`${m}박자로 바꾸면 지금 쓴 악보가 지워져요. (되돌리기로 되살릴 수 있어요)`, ()=>setMeter(m));
+  else setMeter(m);
 });
-$('#meterYes').onclick = ()=>{ if(pendingMeter) setMeter(pendingMeter); pendingMeter = null; el.meterConfirm.hidden = true; };
-$('#meterNo').onclick = ()=>{ pendingMeter = null; el.meterConfirm.hidden = true; };
+function askConfirm(text, run){
+  pendingAction = run;
+  el.meterConfirmText.textContent = text;
+  el.meterConfirm.hidden = false;
+}
+$('#meterYes').onclick = ()=>{ const run = pendingAction; pendingAction = null; el.meterConfirm.hidden = true; if(run) run(); };
+$('#meterNo').onclick = ()=>{ pendingAction = null; el.meterConfirm.hidden = true; };
+el.barCounts.innerHTML = BAR_CHOICES.map(n=>`<button type="button" class="bc" role="radio" data-n="${n}" aria-checked="false">${n}마디</button>`).join('');
+el.barCounts.addEventListener('click', e=>{
+  const b = e.target.closest('.bc'); if(!b) return;
+  const n = +b.dataset.n; if(n===S.bars.length){ el.meterConfirm.hidden = true; return; }
+  const lost = S.bars.slice(n).some(x=>x.length);
+  if(lost) askConfirm(`${n}마디로 줄이면 ${n+1}~${S.bars.length}마디에 쓴 음표가 지워져요. (되돌리기로 되살릴 수 있어요)`, ()=>setBarCount(n));
+  else { el.meterConfirm.hidden = true; setBarCount(n); }
+});
 el.bpm.addEventListener('input', ()=>{ S.bpm = +el.bpm.value; S.term = termFor(S.bpm, S.term); stop(); refresh(); });
 el.tempoTerms.innerHTML = TEMPO_GROUPS.map(g=>`<div class="tgroup"><span>${g.ko}</span><div>${g.terms.map(t=>
   `<button type="button" class="chip" data-it="${t.it}" aria-pressed="false" title="${t.kr}${t.note?' · '+t.note:''}"><b>${t.it}</b><small>${t.lo}~${t.hiLabel || t.hi}</small></button>`).join('')}</div></div>`).join('');
@@ -972,7 +1001,7 @@ el.palette.addEventListener('keydown', e=>{
   if(b && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); paletteClick(+b.dataset.u); }
 });
 $('#undoBtn').onclick = undo;
-$('#clearAllBtn').onclick = ()=>{ snapshot(); S.bars = emptyBars(); sel = null; commit(); toast('모두 지웠어요 — 되돌리기로 되살릴 수 있어요'); };
+$('#clearAllBtn').onclick = ()=>{ snapshot(); S.bars = emptyBars(S.bars.length); sel = null; commit(); toast('모두 지웠어요 — 되돌리기로 되살릴 수 있어요'); };
 el.insts.addEventListener('click', e=>{ const b = e.target.closest('.inst'); if(!b) return; S.inst = b.dataset.inst; stop(); refresh(); preview(67, 6); });
 el.metro.onchange = ()=>{ S.metro = el.metro.checked; };
 el.drums.onchange = ()=>{
