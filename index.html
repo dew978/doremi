@@ -114,7 +114,6 @@ input[type="range"]{width:100%;accent-color:var(--accent);margin:0}
 .paper::before{content:"";position:absolute;top:0;bottom:0;left:16px;width:1.5px;background:var(--margin)}
 #score{min-height:236px}
 #score svg{display:block;max-width:none}
-.paper.grab #score svg{touch-action:none}
 .paper.armed #score svg{cursor:copy}
 #score .marker{fill:var(--marker)}
 #score .barno{fill:var(--ink-2);font:500 11px "IBM Plex Sans KR",sans-serif}
@@ -169,7 +168,59 @@ body.cover-open{overflow:hidden}
 .credit{position:relative;margin:0;font-size:26px;font-weight:700;letter-spacing:.12em;opacity:.85}
 .sample-credit{margin:-10px 0 0;text-align:center;font-size:11.5px;color:var(--cover-ink);opacity:.6}
 .app-credit{margin:0;text-align:center;font-size:25px;font-weight:700;letter-spacing:.1em;color:var(--cover-ink);opacity:.85}
-@media (prefers-reduced-motion: reduce){.cover,.start{transition:none}}
+/* ---------- motion ---------- */
+/* press: every button dips slightly while held (cursor-click) */
+.btn,.meter,.bc,.chip,.pal,.inst,.seg button{transition:transform .1s ease-out,border-color .12s,background-color .12s,color .12s,box-shadow .2s cubic-bezier(.2,0,.38,.9)}
+.play{transition:transform .1s ease-out,background-color .12s,color .12s}
+.btn:active:not(:disabled),.meter:active,.bc:active,.chip:active,.pal:active,.inst:active,.seg button:active,.play:active,.start:active{transform:scale(.96)}
+/* ripple on the two main actions (ripple-rings, one ring, once) */
+.play,.start{position:relative;overflow:hidden}
+.ripple{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:currentColor;opacity:.3;pointer-events:none;animation:ripple .5s cubic-bezier(.22,.61,.36,1) forwards}
+@keyframes ripple{from{transform:scale(.2)}to{transform:scale(6);opacity:0}}
+/* play ↔ stop icon (scale-swap) */
+.play svg.swap{animation:swapIn .35s cubic-bezier(.34,1.3,.64,1)}
+@keyframes swapIn{from{transform:scale(.2);opacity:.3}}
+/* note / rest tab: the active pill slides across (active-indicator-glide) */
+.seg{position:relative}
+.seg .glider{position:absolute;top:0;left:0;height:100%;background:var(--ink);border-radius:9px;pointer-events:none}
+.seg .glider.ready{transition:transform .22s cubic-bezier(.25,1,.5,1),width .22s cubic-bezier(.25,1,.5,1)}
+.seg button{position:relative}
+.seg.glide button[aria-pressed="true"]{background:transparent}
+/* picked-up note lifts off the tray (shadow-elevation) */
+.pal.armed{transform:translateY(-8px);box-shadow:inset 0 0 0 1.5px var(--accent),0 4px 16px -4px var(--shadow)}
+.pal.armed:active{transform:translateY(-8px) scale(.96)}
+/* score: placed note settles (spring-overshoot), selected note beats once (pulse), refused drop shakes (shake).
+   Notes only ever scale — vertical movement would read as a pitch change. */
+#score .pop,#score .beat{transform-box:fill-box;transform-origin:center}
+#score .pop{animation:notePop .28s cubic-bezier(.34,1.5,.64,1)}
+#score .beat{animation:noteBeat .3s ease-in-out}
+@keyframes notePop{from{transform:scale(.55);opacity:.4}}
+@keyframes noteBeat{50%{transform:scale(1.18)}}
+#score .ghost.shake{animation:shake .4s ease-in-out}
+@keyframes shake{15%{transform:translateX(-6px)}35%{transform:translateX(5px)}55%{transform:translateX(-3.5px)}75%{transform:translateX(2px)}}
+/* playback marker glides from note to note (karaoke-caption) */
+#score .marker{transition:transform .1s cubic-bezier(.2,0,.38,.9),width .1s}
+#score .marker.jump{transition:none}
+/* cover opens like a notebook (split-slide), then the panels rise in order (stagger + fade-slide) */
+.cover.leaf{transition:transform .6s cubic-bezier(.76,0,.24,1);pointer-events:none}
+.cover.leaf.open-l{transform:translateX(-50%)}
+.cover.leaf.open-r{transform:translateX(50%)}
+.wrap.enter > *{animation:rise .3s cubic-bezier(0,0,.38,.9) both}
+.wrap.enter > :nth-child(1){animation-delay:.22s}
+.wrap.enter > :nth-child(2){animation-delay:.27s}
+.wrap.enter > :nth-child(3){animation-delay:.32s}
+.wrap.enter > :nth-child(4){animation-delay:.37s}
+.wrap.enter > :nth-child(n+5){animation-delay:.42s}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}}
+.toast:not([hidden]){animation:toastIn .2s cubic-bezier(0,0,.38,.9)}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}}
+.confirm:not([hidden]){animation:fadeIn .15s ease-out}
+@keyframes fadeIn{from{opacity:0}}
+/* motion off (device setting by default, or the on-page switch): every state still appears, just without movement */
+.motion-off *,.motion-off *::before,.motion-off *::after{animation-duration:.001ms!important;animation-delay:0s!important;transition-duration:.001ms!important}
+.motion-off .ripple{display:none}
+.motion-opt{display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;color:var(--cover-label-sub);margin-top:4px}
+.motion-opt.app{color:var(--cover-ink);opacity:.8;align-self:center}
 
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--sheet);padding:10px 16px;border-radius:10px;font-size:14px;max-width:calc(100% - 32px);z-index:30}
 </style>
@@ -198,6 +249,7 @@ body.cover-open{overflow:hidden}
     <p class="cover-title" id="coverTitle">도레미 작곡 공책</p>
     <p class="cover-sub">박자와 빠르기를 정하고, 음표를 놓아 나만의 가락을 만들어요.</p>
     <button class="start" id="startBtn" type="button"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M4 2.5v13l11-6.5z" fill="currentColor"/></svg>시작하기</button>
+    <label class="motion-opt"><input type="checkbox" class="motion-chk" id="motionChkCover"> 움직임 효과</label>
   </div>
   <p class="credit">삼대 710 제작</p>
 </div>
@@ -285,6 +337,7 @@ body.cover-open{overflow:hidden}
       </div>
     </div>
   </section>
+  <label class="motion-opt app"><input type="checkbox" class="motion-chk" id="motionChkApp"> 움직임 효과</label>
   <p class="app-credit">삼대 710 제작</p>
   <p class="sample-credit">피아노 소리: Salamander Grand Piano — Alexander Holm (CC BY 3.0)</p>
 </div>
@@ -415,7 +468,7 @@ function snapshot(){
   history.push(JSON.stringify({key:S.key,meter:S.meter,bars:S.bars}));
   if(history.length>150) history.shift();
 }
-function commit(){ stop(); refresh(); }
+function commit(){ const keep = fx; stop(); fx = keep; refresh(); }   // stop() may redraw; keep the pending note motion for the final draw
 
 const el = {
   meters:$('#meters'), meterDesc:$('#meterDesc'), meterConfirm:$('#meterConfirm'), meterConfirmText:$('#meterConfirmText'),
@@ -424,6 +477,23 @@ const el = {
   palette:$('#palette'), score:$('#score'), paper:$('#paper'), hint:$('#hint'), floater:$('#floater'),
   insts:$('#insts'), playBtn:$('#playBtn'), metro:$('#metro'), drums:$('#drums'), progBar:$('#progBar'), playPos:$('#playPos'), toast:$('#toast')
 };
+// play button keeps separate icon and label nodes so a ripple inside it survives a state change
+el.playBtn.innerHTML = '<span class="play-ico" style="display:inline-flex"></span><span class="play-lbl"></span>';
+el.playIcon = el.playBtn.querySelector('.play-ico');
+el.playLabel = el.playBtn.querySelector('.play-lbl');
+// sliding pill behind the note / rest tabs
+el.glider = document.createElement('span');
+el.glider.className = 'glider';
+(function(){ const seg = $('#kindNote').parentElement; seg.classList.add('glide'); seg.prepend(el.glider); })();
+function ripple(e){
+  const b = e.currentTarget, r = b.getBoundingClientRect(), s = document.createElement('span');
+  s.className = 'ripple';
+  s.style.left = (e.clientX - r.left) + 'px'; s.style.top = (e.clientY - r.top) + 'px';
+  b.appendChild(s);
+  setTimeout(()=>s.remove(), 600);
+}
+el.playBtn.addEventListener('pointerdown', ripple);
+$('#startBtn').addEventListener('pointerdown', ripple);
 
 /* ---------- icons ---------- */
 const flag = y => `<path d="M19 ${y}c.6 5 8.5 6.5 6.2 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`;
@@ -468,6 +538,23 @@ el.palette.innerHTML = DURS.map(d=>`<button type="button" class="pal" data-u="${
 const ROWH = 118, TOPLINE = 40;
 let hit = {bars:[], notes:[]};
 let playing = null;
+let markerEl = null;
+let fx = null;   // {kind:'pop'|'beat', bar, idx, v?} — applied to one note by the next render, then cleared
+// Move the playback marker to the note being played. It glides within a row and jumps between rows.
+function placeMarker(glide){
+  if(!markerEl) return;
+  const hb = playing && hit.bars[playing.bar];
+  if(!hb){ markerEl.setAttribute('visibility','hidden'); markerEl.dataset.row = ''; return; }
+  let x, w = 30;
+  if(playing.idx>=0){ const nx = (hit.notes[playing.bar]||[])[playing.idx]; if(nx==null) return; x = nx - 9; }
+  else { x = hb.endX - 8; w = Math.max(20, hb.ne - hb.endX + 8); }
+  const y = hb.top - 26, sameRow = markerEl.dataset.row === String(hb.y);
+  markerEl.classList.toggle('jump', !(glide && sameRow));
+  markerEl.style.transform = `translate(${x}px,${y}px)`;
+  markerEl.setAttribute('width', w);
+  markerEl.dataset.row = String(hb.y);
+  markerEl.setAttribute('visibility','visible');
+}
 let ghostLayer = null, ghostState = null;
 const tok = (cs,n) => cs.getPropertyValue(n).trim();
 function svgEl(parent, tag, attrs, text){
@@ -524,20 +611,21 @@ function attachDot(sn){
   if(VF.Dot && VF.Dot.buildAndAttach) VF.Dot.buildAndAttach([sn],{all:true});
   else if(sn.addDotToAll) sn.addDotToAll();
 }
+// A note's tones in drawing order (low to high); j is each tone's slot in pitchesOf(n)
+const sortedTones = n => pitchesOf(n).map((p,j)=>({k:p.k, m:p.m, j})).sort((a,c)=>diOfKey(a.k)-diOfKey(c.k) || a.m-c.m);
 function makeNote(n, b, i, C, stave){
   const D = DUR[n.d], rest = n.m==null;
-  // VexFlow wants chord keys from low to high; remember each key's slot in the note (i) for highlighting
-  const ps = pitchesOf(n).map((p,j)=>({k:p.k, m:p.m, j})).sort((a,c)=>diOfKey(a.k)-diOfKey(c.k) || a.m-c.m);
+  const ps = sortedTones(n);
   const sn = new VF.StaveNote({
     keys: rest ? [D.u>=16 ? 'd/5' : 'b/4'] : ps.map(p=>p.k),
     duration: D.vf + (D.dots?'d':'') + (rest?'r':''),
     auto_stem: !rest, clef:'treble'
   });
   if(D.dots) attachDot(sn);
+  if(sn.setAttribute) sn.setAttribute('id', `n${b}-${i}`);   // drawn as <g id="vf-n{bar}-{index}">, used to animate one note
   const isSel = sel && sel.bar===b && sel.idx===i;
-  const isPlay = playing && playing.bar===b && playing.idx===i;
   const chordSel = isSel && ps.length>1 && !!sn.setKeyStyle;   // in a chord only the chosen tone lights up
-  const col = (isPlay || (isSel && !chordSel)) ? C.accent : C.ink;
+  const col = (isSel && !chordSel) ? C.accent : C.ink;
   sn.setStyle({fillStyle:col, strokeStyle:col});
   if(chordSel){ const h = ps.findIndex(p=>p.j===(sel.v||0)); if(h>=0) sn.setKeyStyle(h, {fillStyle:C.accent, strokeStyle:C.accent}); }
   if(sn.setLedgerLineStyle) sn.setLedgerLineStyle({fillStyle:col, strokeStyle:col, lineWidth:1.3});
@@ -602,6 +690,8 @@ function render(){
   svg.setAttribute('aria-label', `${S.meter}박자 ${NB}마디 악보`);
   const BT = VF.Barline.type || VF.BarlineType;
   hit = {bars:[], notes:[]};
+  // one playback marker, created first so it sits behind the notes; moved by placeMarker()
+  markerEl = svgEl(svg,'rect',{x:0,y:0,width:30,height:92,rx:6,class:'marker jump',visibility:'hidden'});
 
   for(let b=0;b<NB;b++){
     const {r, c, x, w} = layout[b];
@@ -628,19 +718,29 @@ function render(){
       new VF.Formatter().joinVoices([voice]).format([voice], fw);
       xs = notes.map(n=>n.getAbsoluteX());
       endX = Math.min(ne - 12, ns + fw + 14);
-      if(playing && playing.bar===b && playing.idx>=0 && xs[playing.idx]!=null)
-        svgEl(svg,'rect',{x:xs[playing.idx]-9,y:top-26,width:30,height:bot-top+52,rx:6,class:'marker'});
       voice.draw(ctx, stave);
       beams.forEach(bm=>{ bm.setStyle({fillStyle:C.ink,strokeStyle:C.ink}); bm.setContext(ctx).draw(); });
     }
-    if(playing && playing.bar===b && playing.idx===-1)
-      svgEl(svg,'rect',{x:endX-8,y:top-26,width:Math.max(20,ne-endX+8),height:bot-top+52,rx:6,class:'marker'});
     svgEl(svg,'text',{x:x+3,y:top-20,class:'barno'}, String(b+1));
     const gy = bot + 28, gw = ne - ns;
     svgEl(svg,'rect',{x:ns,y:gy,width:gw,height:3,rx:1.5,class:'gauge'});
     if(u>0) svgEl(svg,'rect',{x:ns,y:gy,width:gw*u/CAP,height:3,rx:1.5,class:u>=CAP?'gauge-full':'gauge-part'});
-    hit.bars.push({b, x, y:rowTop, w, h:ROWH, top, bot, endX});
+    hit.bars.push({b, x, y:rowTop, w, h:ROWH, top, bot, endX, ne});
     hit.notes[b] = xs;
+  }
+  placeMarker(false);
+  // one-shot motion for the note that was just placed or selected
+  if(fx){
+    const g = svg.querySelector(`#vf-n${fx.bar}-${fx.idx}`), n = S.bars[fx.bar] && S.bars[fx.bar][fx.idx];
+    if(g && n){
+      let target = g;
+      if(fx.v!=null && pitchesOf(n).length>1){
+        const heads = g.querySelectorAll('.vf-notehead'), slot = sortedTones(n).findIndex(p=>p.j===fx.v);
+        if(heads[slot]) target = heads[slot];
+      }
+      target.classList.add(fx.kind);
+    }
+    fx = null;
   }
   ghostLayer = svgEl(svg,'g',{class:'ghost-layer'});
   if(ghostState) drawGhost(ghostState);
@@ -717,23 +817,37 @@ function noteAt(hb, p){
   xs.forEach((nx,i)=>{ const d = Math.abs(p.x-(nx+6)); if(d<bd){ bd = d; best = i; } });
   return bd<=14 ? best : -1;
 }
+// A refused drop: the ghost stays for a moment and shakes, alongside the toast that says why
+let rejectT;
+function reject(t, msg){
+  toast(msg);
+  drawGhost(t);
+  const g = ghostLayer && ghostLayer.querySelector('.ghost');
+  if(g) g.classList.add('shake');
+  clearTimeout(rejectT);
+  rejectT = setTimeout(()=>{ if(ghostState===t) drawGhost(null); }, 600);
+}
 function place(t){
   if(!t) return;
   if(t.chord!=null){
     const n = S.bars[t.b][t.chord];
-    if(!t.ok){ toast(t.why==='full' ? `화음은 음 ${MAX_CHORD}개까지만 쌓을 수 있어요` : '이미 있는 음이에요'); return; }
+    if(!t.ok){ reject(t, t.why==='full' ? `화음은 음 ${MAX_CHORD}개까지만 쌓을 수 있어요` : '이미 있는 음이에요'); return; }
     snapshot();
     const k = keyOfDi(t.di);
     (n.x = n.x || []).push({k, m:keyToMidi(k)});
     preview(pitchesOf(n).map(q=>q.m), n.d);
     sel = null;
+    tool = null;   // one note per pick-up: after it lands, touching the score edits notes instead of adding more
+    fx = {kind:'pop', bar:t.b, idx:t.chord, v:n.x.length};   // only the added tone pops
     commit(); return;
   }
-  if(!t.ok){ toast(`${t.b+1}마디에는 ${DUR[t.u][t.rest?'rest':'note']}가 들어갈 자리가 없어요`); return; }
+  if(!t.ok){ reject(t, `${t.b+1}마디에는 ${DUR[t.u][t.rest?'rest':'note']}가 들어갈 자리가 없어요`); return; }
   snapshot();
   if(t.rest) S.bars[t.b].push({m:null, d:t.u});
   else { const k = keyOfDi(t.di), m = keyToMidi(k); S.bars[t.b].push({m, k, d:t.u}); preview(m, t.u); }
   sel = null;
+  tool = null;
+  fx = {kind:'pop', bar:t.b, idx:S.bars[t.b].length-1};
   commit();
 }
 
@@ -776,6 +890,7 @@ el.score.addEventListener('pointerdown', e=>{
     let v = 0;
     ps.forEach((q,i)=>{ if(Math.abs(yOf(q)-p.y) < Math.abs(yOf(ps[v])-p.y)) v = i; });
     sel = {bar:hb.b, idx:ni, v};
+    fx = {kind:'beat', bar:hb.b, idx:ni, v};
     if(ps.length) preview(ps.map(q=>q.m));
     drag = {kind:'note', bar:hb.b, idx:ni, v, sy:e.clientY, moved:false, lastDi: ps.length ? diOfKey(ps[v].k) : null};
   } else sel = null;
@@ -785,6 +900,13 @@ el.score.addEventListener('pointermove', e=>{
   if(!drag && tool && e.pointerType==='mouse') drawGhost(targetAt(e, tool.u, tool.rest));
 });
 el.score.addEventListener('pointerleave', ()=>{ if(!drag) drawGhost(null); });
+// Touch: a finger that lands on a placed note (or while carrying a note) must drag that note, not scroll the page.
+// Anywhere else on the score the page still scrolls as usual.
+el.score.addEventListener('touchstart', e=>{
+  const t = e.touches[0]; if(!t) return;
+  const p = svgPoint(t), hb = barAt(p);
+  if(hb && (tool || noteAt(hb, p) >= 0)) e.preventDefault();
+}, {passive:false});
 document.addEventListener('pointermove', e=>{
   if(!drag) return;
   if(drag.kind==='palette'){
@@ -817,9 +939,10 @@ function endDrag(e, cancelled){
   const d = drag; drag = null;
   el.floater.hidden = true;
   if(d.kind==='palette'){
-    if(!d.moved){ if(!cancelled) paletteClick(d.u); }
-    else if(!cancelled) place(targetAt(e, d.u, d.rest));
+    const t = (d.moved && !cancelled) ? targetAt(e, d.u, d.rest) : null;
     drawGhost(null);
+    if(!d.moved){ if(!cancelled) paletteClick(d.u); }
+    else place(t);
   } else if(d.kind==='place'){
     const t = (cancelled || !tool) ? null : targetAt(e, tool.u, tool.rest);
     drawGhost(null);
@@ -950,9 +1073,9 @@ function refresh(){
     h += `<button class="btn" data-act="desel" type="button">완료</button>`;
   } else if(tool){
     const D = DUR[tool.u];
-    h = `<strong>${tool.rest?D.rest:D.note}</strong>를 들고 있어요. 악보에서 원하는 높이를 누르면 놓여요. <button class="btn" data-act="drop" type="button">내려놓기</button>`;
+    h = `<strong>${tool.rest?D.rest:D.note}</strong>를 들고 있어요. 빈 자리를 누르면 그 높이에 놓이고, 놓은 음 위를 누르면 <strong>화음</strong>으로 쌓여요. <button class="btn" data-act="drop" type="button">내려놓기</button>`;
   } else {
-    h = '위의 음표를 <strong>악보로 끌어다 놓으세요</strong>. 놓는 높이가 음 높이예요. 놓은 음 위에 겹쳐 놓으면 <strong>화음</strong>이 돼요(3개까지). 놓은 음은 눌러서 고치거나 위아래로 끌 수 있어요.';
+    h = '위의 음표를 <strong>악보로 가져다 놓으세요</strong>. 놓은 음은 <strong>눌러서 위아래로 끌면</strong> 그 음만 높이가 바뀌어요. 화음은 위에서 음표를 다시 가져와 놓은 음 위에 겹쳐요(3개까지).';
   }
   el.hint.innerHTML = h;
   $('#undoBtn').disabled = !history.length;
@@ -960,8 +1083,20 @@ function refresh(){
   el.insts.querySelectorAll('.inst').forEach(b=>b.setAttribute('aria-checked', String(b.dataset.inst===S.inst)));
   el.metro.checked = S.metro;
   el.drums.checked = S.drums;
-  el.playBtn.className = 'play' + (playState ? ' stop' : '');
-  el.playBtn.innerHTML = playState ? STOP_ICON + '정지' : PLAY_ICON + '재생';
+  // play ↔ stop: redraw the button only when the state changes, so the new icon can swap in
+  const pst = playState ? 'stop' : 'play';
+  if(el.playBtn.dataset.state !== pst){
+    const first = !el.playBtn.dataset.state;
+    el.playBtn.dataset.state = pst;
+    el.playBtn.className = 'play' + (playState ? ' stop' : '');
+    el.playIcon.innerHTML = playState ? STOP_ICON : PLAY_ICON;
+    el.playLabel.textContent = playState ? '정지' : '재생';
+    if(!first) el.playIcon.firstElementChild.classList.add('swap');
+  }
+  // note / rest tab indicator
+  const act = kind==='note' ? $('#kindNote') : $('#kindRest');
+  el.glider.style.width = act.offsetWidth + 'px';
+  el.glider.style.transform = `translateX(${act.offsetLeft}px)`;
 }
 
 /* ---------- control events ---------- */
@@ -1241,7 +1376,7 @@ function tick(){
   if(now >= 0){
     let ev = null;
     for(const e of P.events){ if(now>=e.t && now<e.end){ ev = e; break; } }
-    if(ev && (!playing || playing.bar!==ev.bar || playing.idx!==ev.idx)){ playing = {bar:ev.bar, idx:ev.idx}; render(); }
+    if(ev && (!playing || playing.bar!==ev.bar || playing.idx!==ev.idx)){ playing = {bar:ev.bar, idx:ev.idx}; placeMarker(true); }
     const bar = Math.floor(now / P.barLen), beat = Math.floor((now - bar*P.barLen)/P.beat) + 1;
     el.playPos.textContent = `${bar+1}마디 · ${beat}박째`;
     el.progBar.style.width = (now/P.total*100).toFixed(2) + '%';
@@ -1263,16 +1398,50 @@ function stop(finished){
 }
 
 /* ---------- cover ---------- */
+/* ---------- motion switch ----------
+   Starts from the device's reduced-motion setting; the on-page switch overrides it and is remembered on this browser. */
+const MOTION_KEY = 'doremi-motion';
+let motionOn = true;
+try{ motionOn = !matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+try{ const v = localStorage.getItem(MOTION_KEY); if(v==='1') motionOn = true; else if(v==='0') motionOn = false; }catch(e){}
+const motionChks = Array.from(document.querySelectorAll('.motion-chk'));
+function setMotion(on, save){
+  motionOn = on;
+  document.documentElement.classList.toggle('motion-off', !on);
+  motionChks.forEach(c=>{ c.checked = on; });
+  if(save) try{ localStorage.setItem(MOTION_KEY, on ? '1' : '0'); }catch(e){}
+}
+motionChks.forEach(c=>c.addEventListener('change', ()=>setMotion(c.checked, true)));
+setMotion(motionOn, false);
+
 const cover = $('#cover');
 document.body.classList.add('cover-open');
 $('#startBtn').addEventListener('click', ()=>{
   ensureAudio();   // the start tap also unlocks sound for the rest of the session
-  cover.classList.add('leaving');
   document.body.classList.remove('cover-open');
-  setTimeout(()=>{ cover.hidden = true; }, 420);
+  if(motionOn){
+    // The cover opens like a notebook: two clipped copies slide apart over the page that is already drawn underneath.
+    const wrap = $('.wrap');
+    const leaves = ['open-l','open-r'].map((cls,i)=>{
+      const c = cover.cloneNode(true);
+      ['id','role','aria-modal','aria-labelledby'].forEach(a=>c.removeAttribute(a));
+      c.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+      c.setAttribute('aria-hidden','true'); c.inert = true;
+      c.classList.add('leaf');
+      c.style.clipPath = i ? 'inset(0 0 0 50%)' : 'inset(0 50% 0 0)';
+      document.body.appendChild(c);
+      return {c, cls};
+    });
+    wrap.classList.add('enter');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>leaves.forEach(l=>l.c.classList.add(l.cls))));
+    setTimeout(()=>leaves.forEach(l=>l.c.remove()), 750);
+    setTimeout(()=>wrap.classList.remove('enter'), 1200);
+  }
+  cover.hidden = true;
   render();
 });
 $('#startBtn').focus();
+requestAnimationFrame(()=>el.glider.classList.add('ready'));   // the first placement of the tab pill should not animate
 
 /* ---------- theme & resize ---------- */
 let lastW = 0;
