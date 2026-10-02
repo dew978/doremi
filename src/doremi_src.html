@@ -1,0 +1,1466 @@
+<title>도레미 작곡 공책</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#EEF1F8; --sheet:#FFFFFF; --surface:#E3E8F3; --ink:#1B2140; --ink-2:#4F587C;
+  --line:#A9B3D1; --rule:#CDD4E6; --accent:#2F55D4; --accent-ink:#FFFFFF; --accent-soft:rgba(47,85,212,.14);
+  --marker:#FFE066; --margin:#F2A0A0; --active-bg:rgba(47,85,212,.07);
+  --ok:#2E8C6A; --warn:#D29A1E; --warn-soft:#FDF0D2; --shadow:rgba(27,33,64,.45);
+  --c-piano:#1B2140; --c-recorder:#2E8C6A;
+  --cover-bg:#22307A; --cover-ink:#EEF1FF; --cover-staff:rgba(238,241,255,.2);
+  --cover-label:#FFFFFF; --cover-label-ink:#1B2140; --cover-label-sub:#4F587C;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1324; --sheet:#171C33; --surface:#1D2342; --ink:#E4E8F7; --ink-2:#9AA3C7;
+    --line:#56608C; --rule:#2E365E; --accent:#8AA2FF; --accent-ink:#0F1324; --accent-soft:rgba(138,162,255,.18);
+    --marker:#5A4C12; --margin:#6E3B48; --active-bg:rgba(138,162,255,.09);
+    --ok:#5FC79F; --warn:#E3B04B; --warn-soft:#352B14; --shadow:rgba(0,0,0,.8);
+    --c-piano:#E4E8F7; --c-recorder:#5FC79F;
+    --cover-bg:#121838; --cover-ink:#DDE3FA; --cover-staff:rgba(221,227,250,.14);
+    --cover-label:#1D2342; --cover-label-ink:#E4E8F7; --cover-label-sub:#9AA3C7;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1324; --sheet:#171C33; --surface:#1D2342; --ink:#E4E8F7; --ink-2:#9AA3C7;
+  --line:#56608C; --rule:#2E365E; --accent:#8AA2FF; --accent-ink:#0F1324; --accent-soft:rgba(138,162,255,.18);
+  --marker:#5A4C12; --margin:#6E3B48; --active-bg:rgba(138,162,255,.09);
+  --ok:#5FC79F; --warn:#E3B04B; --warn-soft:#352B14; --shadow:rgba(0,0,0,.8);
+  --c-piano:#E4E8F7; --c-recorder:#5FC79F;
+  --cover-bg:#121838; --cover-ink:#DDE3FA; --cover-staff:rgba(221,227,250,.14);
+  --cover-label:#1D2342; --cover-label-ink:#E4E8F7; --cover-label-sub:#9AA3C7;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--cover-bg);color:var(--ink);font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:26px 64px;display:flex;flex-direction:column;gap:18px}
+@media (max-width:520px){.wrap{padding-inline:16px;padding-block:18px 56px}}
+h1,h2{font-family:"Jua","IBM Plex Sans KR","Malgun Gothic",sans-serif;font-weight:400}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+
+.top h1{margin:0;font-size:clamp(28px,4vw,38px);line-height:1.1;color:var(--cover-ink)}
+.lede{margin:4px 0 0;color:var(--cover-ink);opacity:.8}
+
+.setup{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:720px){.setup{grid-template-columns:1fr}}
+.panel{background:var(--surface);border-radius:14px;padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel h2{margin:0;font-size:20px;line-height:1.2;display:flex;align-items:center;gap:10px}
+.num{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--sheet);display:grid;place-items:center;font-size:16px;flex:none}
+.sub{margin:0;font-size:13px;color:var(--ink-2)}
+
+.btn{font-size:13.5px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:9px;padding:6px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:1.2}
+.btn:hover:not(:disabled){border-color:var(--ink-2)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+
+/* 1 박자 */
+.meters{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.meter{border:1.5px solid var(--rule);background:var(--sheet);border-radius:11px;padding:8px 4px;cursor:pointer;font-family:"Jua",sans-serif;font-size:27px;line-height:.82;display:flex;flex-direction:column;align-items:center}
+.meter:hover{border-color:var(--ink-2)}
+.meter[aria-checked="true"]{border-color:var(--accent);color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.confirm{background:var(--warn-soft);border-radius:10px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;font-size:13.5px}
+.confirm p{margin:0;flex:1 1 200px}
+
+/* 2 빠르기 */
+.tempo-read{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap}
+.bpm-big{font-family:"Jua",sans-serif;font-size:38px;line-height:1;display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.bpm-big svg{width:16px;height:30px}
+.tname strong{font-size:16px}
+.tname span{font-size:13px;color:var(--ink-2);margin-left:6px}
+input[type="range"]{width:100%;accent-color:var(--accent);margin:0}
+.tempo-terms{display:flex;flex-wrap:wrap;gap:8px 14px}
+.tgroup{display:flex;flex-direction:column;gap:4px}
+.tgroup > span{font-size:12px;font-weight:700;color:var(--ink-2)}
+.tgroup > div{display:flex;flex-wrap:wrap;gap:4px}
+.chip{border:1px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:9px;padding:4px 9px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
+.chip b{font-size:13px}
+.chip small{font-size:11px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.chip:hover{border-color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.chip[aria-pressed="true"] small{color:inherit;opacity:.75}
+.field{display:flex;align-items:center;gap:10px}
+.field label,.field-label{font-weight:700;font-size:14px;flex:none}
+.barcounts{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.bc{border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:10px;padding:7px 4px;cursor:pointer;font-family:"Jua",sans-serif;font-size:17px;line-height:1.1}
+.bc:hover{border-color:var(--ink-2)}
+.bc[aria-checked="true"]{border-color:var(--accent);color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.field select{flex:1;min-width:0;font:inherit;font-size:15px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink);cursor:pointer}
+.field select:hover{border-color:var(--ink-2)}
+
+/* 3 음표 놓기 */
+.compose-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--sheet)}
+.seg button{border:0;background:transparent;padding:7px 16px;cursor:pointer;color:var(--ink-2);font-weight:700;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
+.palette{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+@media (max-width:720px){.palette{grid-template-columns:repeat(4,1fr)}}
+.pal{background:var(--sheet);border:1.5px solid var(--rule);border-radius:11px;padding:6px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:0;cursor:grab;min-width:0;touch-action:none;user-select:none;-webkit-user-select:none}
+.pal svg{width:28px;height:40px;pointer-events:none}
+.pal .dn{font-size:12.5px;font-weight:700;line-height:1.25;text-align:center;word-break:keep-all;pointer-events:none}
+.pal .db{font-size:11px;color:var(--ink-2);font-variant-numeric:tabular-nums;pointer-events:none}
+.pal:hover{border-color:var(--accent)}
+.pal.armed{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent);color:var(--accent)}
+.paper{position:relative;background:var(--sheet);border-radius:14px;box-shadow:0 1px 0 var(--rule),0 12px 30px -22px var(--shadow);padding:12px 14px 6px 30px;overflow-x:auto}
+.paper::before{content:"";position:absolute;top:0;bottom:0;left:16px;width:1.5px;background:var(--margin)}
+#score{min-height:236px}
+#score svg{display:block;max-width:none}
+.paper.armed #score svg{cursor:copy}
+#score .marker{fill:var(--marker)}
+#score .barno{fill:var(--ink-2);font:500 11px "IBM Plex Sans KR",sans-serif}
+#score .gauge{fill:var(--rule)}
+#score .gauge-part{fill:var(--warn)}
+#score .gauge-full{fill:var(--ok)}
+#score .ghost-bar{fill:var(--active-bg)}
+#score .ghost{color:var(--accent);opacity:.85}
+#score .ghost.bad{color:var(--warn)}
+#score .ghost line{stroke:currentColor;stroke-width:1.4}
+#score .ghost text{fill:currentColor;font:700 13px "IBM Plex Sans KR",sans-serif}
+.vf-fail{margin:0;padding:40px 8px;color:var(--ink-2)}
+.sheet-foot{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between}
+.hint{margin:0;font-size:14px;color:var(--ink-2);display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;min-height:32px}
+.hint strong{color:var(--ink)}
+.hint .btn{padding:4px 10px}
+.tools{display:flex;gap:6px}
+.floater{position:fixed;left:0;top:0;width:40px;height:56px;pointer-events:none;z-index:20;color:var(--accent);transform:translate(-50%,-80%)}
+.floater svg{width:100%;height:100%}
+
+/* 4 연주 */
+.play-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px}
+.insts{display:inline-flex;gap:6px;flex-wrap:wrap}
+.inst{display:inline-flex;align-items:center;gap:6px;padding:6px 14px 6px 8px;border-radius:999px;border:1.5px solid var(--rule);background:var(--sheet);cursor:pointer;font-weight:700;font-size:14px}
+.inst svg{width:26px;height:30px;color:var(--c)}
+.inst:hover{border-color:var(--c)}
+.inst[aria-checked="true"]{border-color:var(--c);box-shadow:inset 0 0 0 1.5px var(--c)}
+.play{font-family:"Jua",sans-serif;font-size:20px;padding:10px 26px 10px 20px;border-radius:999px;background:var(--accent);color:var(--accent-ink);border:0;cursor:pointer;display:inline-flex;gap:10px;align-items:center}
+.play svg{width:17px;height:17px}
+.play.stop{background:var(--ink);color:var(--sheet)}
+.opt{display:inline-flex;gap:7px;align-items:center;cursor:pointer;font-size:14px}
+input[type="checkbox"]{accent-color:var(--accent);width:17px;height:17px;margin:0}
+.progress{flex:1 1 200px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.track{height:6px;background:var(--rule);border-radius:3px;overflow:hidden}
+.track i{display:block;height:100%;width:0;background:var(--accent)}
+.pos{font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+/* 표지 */
+body.cover-open{overflow:hidden}
+.cover{position:fixed;inset:0;z-index:50;background:var(--cover-bg);color:var(--cover-ink);display:grid;grid-template-rows:1fr auto;place-items:center;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(20px + env(safe-area-inset-bottom,0px));overflow:hidden;transition:opacity .4s ease,visibility .4s}
+.cover.leaving{opacity:0;visibility:hidden}
+.cover-staff{position:absolute;left:0;right:0;top:50%;width:100%;height:220px;transform:translateY(-50%);pointer-events:none}
+.cover-card{position:relative;background:var(--cover-label);color:var(--cover-label-ink);border-radius:18px;padding:30px clamp(22px,5vw,48px) 30px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 24px 60px -24px rgba(0,0,0,.6);max-width:520px;width:100%}
+.cover-card::before,.cover-card::after{content:"";position:absolute;left:18px;right:18px;height:1.5px;background:var(--margin);opacity:.8}
+.cover-card::before{top:12px}
+.cover-card::after{bottom:12px}
+.cover-eyebrow{margin:0;font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--accent)}
+.cover-title{margin:0;font-family:"Jua","IBM Plex Sans KR",sans-serif;font-size:clamp(38px,8vw,60px);line-height:1.05;text-wrap:balance}
+.cover-sub{margin:0;font-size:14.5px;color:var(--cover-label-sub)}
+.start{margin-top:14px;font-family:"Jua",sans-serif;font-size:24px;padding:14px 40px 14px 34px;border-radius:999px;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer;display:inline-flex;align-items:center;gap:12px;box-shadow:0 10px 24px -10px var(--accent);transition:transform .15s ease}
+.start:hover{transform:translateY(-2px)}
+.start svg{width:20px;height:20px}
+.credit{position:relative;margin:0;font-size:26px;font-weight:700;letter-spacing:.12em;opacity:.85}
+.sample-credit{margin:-10px 0 0;text-align:center;font-size:11.5px;color:var(--cover-ink);opacity:.6}
+.app-credit{margin:0;text-align:center;font-size:25px;font-weight:700;letter-spacing:.1em;color:var(--cover-ink);opacity:.85}
+/* ---------- motion ---------- */
+/* press: every button dips slightly while held (cursor-click) */
+.btn,.meter,.bc,.chip,.pal,.inst,.seg button{transition:transform .1s ease-out,border-color .12s,background-color .12s,color .12s,box-shadow .2s cubic-bezier(.2,0,.38,.9)}
+.play{transition:transform .1s ease-out,background-color .12s,color .12s}
+.btn:active:not(:disabled),.meter:active,.bc:active,.chip:active,.pal:active,.inst:active,.seg button:active,.play:active,.start:active{transform:scale(.96)}
+/* ripple on the two main actions (ripple-rings, one ring, once) */
+.play,.start{position:relative;overflow:hidden}
+.ripple{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:currentColor;opacity:.3;pointer-events:none;animation:ripple .5s cubic-bezier(.22,.61,.36,1) forwards}
+@keyframes ripple{from{transform:scale(.2)}to{transform:scale(6);opacity:0}}
+/* play ↔ stop icon (scale-swap) */
+.play svg.swap{animation:swapIn .35s cubic-bezier(.34,1.3,.64,1)}
+@keyframes swapIn{from{transform:scale(.2);opacity:.3}}
+/* note / rest tab: the active pill slides across (active-indicator-glide) */
+.seg{position:relative}
+.seg .glider{position:absolute;top:0;left:0;height:100%;background:var(--ink);border-radius:9px;pointer-events:none}
+.seg .glider.ready{transition:transform .22s cubic-bezier(.25,1,.5,1),width .22s cubic-bezier(.25,1,.5,1)}
+.seg button{position:relative}
+.seg.glide button[aria-pressed="true"]{background:transparent}
+/* picked-up note lifts off the tray (shadow-elevation) */
+.pal.armed{transform:translateY(-8px);box-shadow:inset 0 0 0 1.5px var(--accent),0 4px 16px -4px var(--shadow)}
+.pal.armed:active{transform:translateY(-8px) scale(.96)}
+/* score: placed note settles (spring-overshoot), selected note beats once (pulse), refused drop shakes (shake).
+   Notes only ever scale — vertical movement would read as a pitch change. */
+#score .pop,#score .beat{transform-box:fill-box;transform-origin:center}
+#score .pop{animation:notePop .28s cubic-bezier(.34,1.5,.64,1)}
+#score .beat{animation:noteBeat .3s ease-in-out}
+@keyframes notePop{from{transform:scale(.55);opacity:.4}}
+@keyframes noteBeat{50%{transform:scale(1.18)}}
+#score .ghost.shake{animation:shake .4s ease-in-out}
+@keyframes shake{15%{transform:translateX(-6px)}35%{transform:translateX(5px)}55%{transform:translateX(-3.5px)}75%{transform:translateX(2px)}}
+/* playback marker glides from note to note (karaoke-caption) */
+#score .marker{transition:transform .1s cubic-bezier(.2,0,.38,.9),width .1s}
+#score .marker.jump{transition:none}
+/* cover opens like a notebook (split-slide), then the panels rise in order (stagger + fade-slide) */
+.cover.leaf{transition:transform .6s cubic-bezier(.76,0,.24,1);pointer-events:none}
+.cover.leaf.open-l{transform:translateX(-50%)}
+.cover.leaf.open-r{transform:translateX(50%)}
+.wrap.enter > *{animation:rise .3s cubic-bezier(0,0,.38,.9) both}
+.wrap.enter > :nth-child(1){animation-delay:.22s}
+.wrap.enter > :nth-child(2){animation-delay:.27s}
+.wrap.enter > :nth-child(3){animation-delay:.32s}
+.wrap.enter > :nth-child(4){animation-delay:.37s}
+.wrap.enter > :nth-child(n+5){animation-delay:.42s}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}}
+.toast:not([hidden]){animation:toastIn .2s cubic-bezier(0,0,.38,.9)}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}}
+.confirm:not([hidden]){animation:fadeIn .15s ease-out}
+@keyframes fadeIn{from{opacity:0}}
+/* motion off (device setting by default, or the on-page switch): every state still appears, just without movement */
+.motion-off *,.motion-off *::before,.motion-off *::after{animation-duration:.001ms!important;animation-delay:0s!important;transition-duration:.001ms!important}
+.motion-off .ripple{display:none}
+.motion-opt{display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;color:var(--cover-label-sub);margin-top:4px}
+.motion-opt.app{color:var(--cover-ink);opacity:.8;align-self:center}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--sheet);padding:10px 16px;border-radius:10px;font-size:14px;max-width:calc(100% - 32px);z-index:30}
+</style>
+
+<div class="cover" id="cover" role="dialog" aria-modal="true" aria-labelledby="coverTitle">
+  <svg class="cover-staff" viewBox="0 0 1200 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g stroke="var(--cover-staff)" stroke-width="2">
+      <line x1="0" y1="70" x2="1200" y2="70"/><line x1="0" y1="90" x2="1200" y2="90"/><line x1="0" y1="110" x2="1200" y2="110"/><line x1="0" y1="130" x2="1200" y2="130"/><line x1="0" y1="150" x2="1200" y2="150"/>
+    </g>
+    <g fill="var(--cover-ink)" stroke="var(--cover-ink)" opacity=".38">
+      <ellipse cx="80" cy="160" rx="11" ry="8" transform="rotate(-20 80 160)" stroke="none"/><line x1="90" y1="157" x2="90" y2="97" stroke-width="2.5"/>
+      <ellipse cx="170" cy="140" rx="11" ry="8" transform="rotate(-20 170 140)" stroke="none"/><line x1="180" y1="137" x2="180" y2="77" stroke-width="2.5"/>
+      <ellipse cx="260" cy="120" rx="11" ry="8" transform="rotate(-20 260 120)" fill="none" stroke-width="3"/><line x1="270" y1="117" x2="270" y2="57" stroke-width="2.5"/>
+      <ellipse cx="350" cy="100" rx="11" ry="8" transform="rotate(-20 350 100)" stroke="none"/><line x1="340" y1="103" x2="340" y2="163" stroke-width="2.5"/>
+      <ellipse cx="840" cy="110" rx="11" ry="8" transform="rotate(-20 840 110)" stroke="none"/><line x1="850" y1="107" x2="850" y2="52" stroke-width="2.5"/>
+      <ellipse cx="910" cy="90" rx="11" ry="8" transform="rotate(-20 910 90)" stroke="none"/><line x1="920" y1="87" x2="920" y2="52" stroke-width="2.5"/>
+      <rect x="849" y="48" width="72" height="7" stroke="none"/>
+      <ellipse cx="1010" cy="80" rx="11" ry="8" transform="rotate(-20 1010 80)" stroke="none"/><line x1="1000" y1="83" x2="1000" y2="143" stroke-width="2.5"/>
+      <ellipse cx="1110" cy="130" rx="15" ry="10" transform="rotate(-12 1110 130)" fill="none" stroke-width="4"/>
+    </g>
+  </svg>
+  <div class="cover-card">
+    <p class="cover-eyebrow">4~16마디 가락 짓기</p>
+    <p class="cover-title" id="coverTitle">도레미 작곡 공책</p>
+    <p class="cover-sub">박자와 빠르기를 정하고, 음표를 놓아 나만의 가락을 만들어요.</p>
+    <button class="start" id="startBtn" type="button"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M4 2.5v13l11-6.5z" fill="currentColor"/></svg>시작하기</button>
+    <label class="motion-opt"><input type="checkbox" class="motion-chk" id="motionChkCover"> 움직임 효과</label>
+  </div>
+  <p class="credit">삼대 710 제작</p>
+</div>
+
+<div class="wrap">
+  <header class="top">
+    <h1>도레미 작곡 공책</h1>
+    <p class="lede">박자와 빠르기를 정하고, 음표를 악보에 끌어다 놓아 나만의 가락을 만들어요.</p>
+  </header>
+
+  <section class="setup">
+    <div class="panel">
+      <h2><span class="num">1</span>조 · 박자 · 마디</h2>
+      <div class="field">
+        <label for="keySel">조</label>
+        <select id="keySel">
+          <optgroup label="장조">
+            <option value="C">다장조 (C major)</option>
+            <option value="G">사장조 (G major)</option>
+            <option value="D">라장조 (D major)</option>
+            <option value="F">바장조 (F major)</option>
+            <option value="Bb">내림나장조 (B♭ major)</option>
+          </optgroup>
+          <optgroup label="단조">
+            <option value="Am">가단조 (A minor)</option>
+            <option value="Em">마단조 (E minor)</option>
+            <option value="Dm">라단조 (D minor)</option>
+          </optgroup>
+        </select>
+      </div>
+      <p class="sub" id="keyDesc"></p>
+      <div class="meters" id="meters" role="radiogroup" aria-label="박자"></div>
+      <p class="sub" id="meterDesc"></p>
+      <div class="field">
+        <span class="field-label">마디 수</span>
+        <div class="barcounts" id="barCounts" role="radiogroup" aria-label="마디 수"></div>
+      </div>
+      <div class="confirm" id="meterConfirm" hidden>
+        <p id="meterConfirmText"></p>
+        <button class="btn primary" id="meterYes" type="button">바꾸기</button>
+        <button class="btn" id="meterNo" type="button">그대로 두기</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2><span class="num">2</span>빠르기</h2>
+      <div class="tempo-read">
+        <span class="bpm-big"><svg viewBox="0 0 18 34" aria-hidden="true"><ellipse cx="7" cy="27" rx="5.6" ry="4" transform="rotate(-22 7 27)" fill="currentColor"/><line x1="12" y1="26" x2="12" y2="2" stroke="currentColor" stroke-width="1.8"/></svg>=<output id="bpmOut" for="bpm">96</output></span>
+        <span class="tname"><strong id="tempoKo">보통 빠르기</strong><span id="tempoIt">Moderato</span></span>
+      </div>
+      <div class="tempo-terms" id="tempoTerms"></div>
+      <input type="range" id="bpm" min="40" max="200" step="1" value="96" aria-label="빠르기: 1분에 4분음표 몇 번">
+      <p class="sub">빠르기말을 누르면 그 기준에 맞춰지고, 슬라이더로 자유롭게 바꿀 수도 있어요.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="compose-head">
+      <h2><span class="num">3</span>음표 놓기</h2>
+      <div class="seg" role="group" aria-label="음표 또는 쉼표">
+        <button type="button" id="kindNote" aria-pressed="true">음표</button>
+        <button type="button" id="kindRest" aria-pressed="false">쉼표</button>
+      </div>
+    </div>
+    <div class="palette" id="palette"></div>
+    <div class="paper" id="paper"><div id="score"></div></div>
+    <div class="sheet-foot">
+      <div class="hint" id="hint" aria-live="polite"></div>
+      <div class="tools">
+        <button class="btn" id="undoBtn" type="button" title="Ctrl+Z">되돌리기</button>
+        <button class="btn" id="clearAllBtn" type="button">모두 지우기</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><span class="num">4</span>연주하기</h2>
+    <div class="play-row">
+      <div class="insts" id="insts" role="radiogroup" aria-label="악기"></div>
+      <button class="play" id="playBtn" type="button"></button>
+      <label class="opt"><input type="checkbox" id="drums"> 드럼 반주</label>
+      <label class="opt"><input type="checkbox" id="metro"> 메트로놈</label>
+      <div class="progress">
+        <div class="track"><i id="progBar"></i></div>
+        <span class="pos" id="playPos">악기를 고르고 재생을 눌러요</span>
+      </div>
+    </div>
+  </section>
+  <label class="motion-opt app"><input type="checkbox" class="motion-chk" id="motionChkApp"> 움직임 효과</label>
+  <p class="app-credit">삼대 710 제작</p>
+  <p class="sample-credit">피아노 소리: Salamander Grand Piano — Alexander Holm (CC BY 3.0)</p>
+</div>
+<div class="floater" id="floater" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+<script>
+(function(){
+'use strict';
+const VF = (window.Vex && window.Vex.Flow) ? window.Vex.Flow : null;
+const $ = s => document.querySelector(s);
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+/* ---------- music data ---------- */
+const NAMES = {c:'도',d:'레',e:'미',f:'파',g:'솔',a:'라',b:'시'};
+const PC = {c:0,d:2,e:4,f:5,g:7,a:9,b:11};
+const LET = ['c','d','e','f','g','a','b'];
+const DI_MIN = 28, DI_MAX = 42, DI_TOP = 38;   // C4 … C6, top staff line = F5
+const METERS = {
+  '2/4':{num:2,den:4,cap:8, desc:'한 마디에 4분음표 2개'},
+  '3/4':{num:3,den:4,cap:12,desc:'한 마디에 4분음표 3개'},
+  '4/4':{num:4,den:4,cap:16,desc:'한 마디에 4분음표 4개'},
+  '6/8':{num:6,den:8,cap:12,desc:'한 마디에 8분음표 6개'}
+};
+// u = length in 16th-note units
+const DURS = [
+  {u:16,vf:'w', dots:0,note:'온음표',  rest:'온쉼표'},
+  {u:12,vf:'h', dots:1,note:'점2분음표',rest:'점2분쉼표'},
+  {u:8, vf:'h', dots:0,note:'2분음표', rest:'2분쉼표'},
+  {u:6, vf:'q', dots:1,note:'점4분음표',rest:'점4분쉼표'},
+  {u:4, vf:'q', dots:0,note:'4분음표', rest:'4분쉼표'},
+  {u:3, vf:'8', dots:1,note:'점8분음표',rest:'점8분쉼표'},
+  {u:2, vf:'8', dots:0,note:'8분음표', rest:'8분쉼표'},
+  {u:1, vf:'16',dots:0,note:'16분음표',rest:'16분쉼표'}
+];
+const DUR = Object.fromEntries(DURS.map(d=>[d.u,d]));
+// Tempo terms and their ♩ ranges; v = the value a term button sets
+const TEMPO_GROUPS = [
+  {ko:'매우 느리게', terms:[{it:'Largo',kr:'라르고',lo:40,hi:60,v:48}, {it:'Lento',kr:'렌토',lo:45,hi:60,v:54}]},
+  {ko:'느리게',     terms:[{it:'Adagio',kr:'아다지오',lo:60,hi:70,v:66}, {it:'Andante',kr:'안단테',lo:52,hi:60,v:56,note:'걷는 속도'}]},
+  {ko:'보통 빠르기', terms:[{it:'Moderato',kr:'모데라토',lo:80,hi:116,v:96}]},
+  {ko:'빠르게',     terms:[{it:'Allegro',kr:'알레그로',lo:116,hi:144,v:130}]},
+  {ko:'매우 빠르게', terms:[{it:'Presto',kr:'프레스토',lo:144,hi:200,v:168,hiLabel:'184 이상'}]}
+];
+const TERMS = TEMPO_GROUPS.flatMap(g=>g.terms.map(t=>Object.assign({group:g.ko}, t)));
+const termOf = it => TERMS.find(t=>t.it===it);
+// Keep the chosen term while the tempo stays inside its range; otherwise pick the closest term that covers it
+function termFor(bpm, current){
+  const cur = termOf(current);
+  if(cur && bpm>=cur.lo && bpm<=cur.hi) return cur.it;
+  const fits = TERMS.filter(t=>bpm>=t.lo && bpm<=t.hi);
+  if(!fits.length) return null;
+  return fits.reduce((a,b)=>Math.abs(b.v-bpm)<Math.abs(a.v-bpm)?b:a).it;
+}
+// Keys: sig = accidentals the key signature puts on each letter
+const KEYS = {
+  C: {name:'다장조',   tonic:'c/4', sig:{}},
+  G: {name:'사장조',   tonic:'g/4', sig:{f:'#'}},
+  D: {name:'라장조',   tonic:'d/4', sig:{f:'#',c:'#'}},
+  F: {name:'바장조',   tonic:'f/4', sig:{b:'b'}},
+  Bb:{name:'내림나장조',tonic:'bb/4',sig:{b:'b',e:'b'}},
+  Am:{name:'가단조',   tonic:'a/4', sig:{}},
+  Em:{name:'마단조',   tonic:'e/4', sig:{f:'#'}},
+  Dm:{name:'라단조',   tonic:'d/4', sig:{b:'b'}}
+};
+const INSTS = [
+  {id:'piano',name:'피아노',color:'var(--c-piano)'},
+  {id:'recorder',name:'리코더',color:'var(--c-recorder)'}
+];
+
+function keyToMidi(k){
+  const [nm,oct] = k.split('/'); const acc = nm.slice(1);
+  return (+oct+1)*12 + PC[nm[0]] + (acc==='#'?1:acc==='b'?-1:0);
+}
+const diOfKey = k => { const [nm,oct] = k.split('/'); return (+oct)*7 + LET.indexOf(nm[0]); };
+// With no accidental given, a note follows the key signature (e.g. F becomes F♯ in G major); '' means natural
+const keyOfDi = (di, acc) => {
+  const l = LET[di%7];
+  if(acc===undefined) acc = KEYS[S.key].sig[l] || '';
+  return l + acc + '/' + Math.floor(di/7);
+};
+// Chords: a note keeps its main pitch in n.k/n.m and up to two added tones in n.x; all share the note's length
+const MAX_CHORD = 3;
+const pitchesOf = n => n.m==null ? [] : [{k:n.k, m:n.m}, ...(n.x||[])];
+function setPitch(n, v, k){
+  const m = keyToMidi(k);
+  if(v===0){ n.k = k; n.m = m; } else n.x[v-1] = {k, m};
+}
+function removePitch(n, v){
+  const ps = pitchesOf(n); ps.splice(v,1);
+  n.k = ps[0].k; n.m = ps[0].m; n.x = ps.slice(1);
+  if(!n.x.length) delete n.x;
+}
+const chordName = n => pitchesOf(n).sort((a,b)=>a.m-b.m).map(p=>nameOf(p.k)).join('·');
+const accOf = k => k.split('/')[0].slice(1);
+const accSym = k => ({'#':'♯','b':'♭'})[accOf(k)] || '';
+const nameOf = k => NAMES[k[0]] + accSym(k);
+const codeOf = k => k[0].toUpperCase() + accSym(k) + k.split('/')[1];
+const mtof = m => 440*Math.pow(2,(m-69)/12);
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+function beats(u){
+  const v = u/(S.meter==='6/8' ? 2 : 4), w = Math.floor(v), f = v-w;
+  const fr = {0.25:'¼',0.5:'½',0.75:'¾'}[f] || '';
+  return (w||!fr ? w : '') + fr + '박';
+}
+
+/* ---------- state (always starts with an empty score) ---------- */
+const BAR_CHOICES = [4, 8, 12, 16];
+const emptyBars = n => Array.from({length:n},()=>[]);
+const S = {key:'C', meter:'4/4', bpm:96, term:'Moderato', bars:emptyBars(8), inst:'piano', metro:false, drums:false};
+// Basic beat per meter, on the 16th-note grid: K = kick, S = snare, H = hi-hat (accented hat = h)
+const DRUMS = {
+  '2/4': {K:[0],      S:[4],     H:[0,2,4,6]},
+  '3/4': {K:[0],      S:[4,8],   H:[0,2,4,6,8,10]},
+  '4/4': {K:[0,8],    S:[4,12],  H:[0,2,4,6,8,10,12,14]},
+  '6/8': {K:[0],      S:[6],     H:[0,2,4,6,8,10]}
+};
+let kind = 'note';        // palette shows notes or rests
+let tool = null;          // armed palette item {u, rest}
+let sel = null;           // {bar, idx}
+let drag = null;
+let pendingAction = null;   // a change waiting for the inline confirm (meter change or fewer bars)
+const history = [];
+const cap = () => METERS[S.meter].cap;
+const used = b => S.bars[b].reduce((a,n)=>a+n.d,0);
+function snapshot(){
+  history.push(JSON.stringify({key:S.key,meter:S.meter,bars:S.bars}));
+  if(history.length>150) history.shift();
+}
+function commit(){ const keep = fx; stop(); fx = keep; refresh(); }   // stop() may redraw; keep the pending note motion for the final draw
+
+const el = {
+  meters:$('#meters'), meterDesc:$('#meterDesc'), meterConfirm:$('#meterConfirm'), meterConfirmText:$('#meterConfirmText'),
+  bpm:$('#bpm'), bpmOut:$('#bpmOut'), tempoKo:$('#tempoKo'), tempoIt:$('#tempoIt'), tempoTerms:$('#tempoTerms'),
+  keySel:$('#keySel'), keyDesc:$('#keyDesc'), barCounts:$('#barCounts'),
+  palette:$('#palette'), score:$('#score'), paper:$('#paper'), hint:$('#hint'), floater:$('#floater'),
+  insts:$('#insts'), playBtn:$('#playBtn'), metro:$('#metro'), drums:$('#drums'), progBar:$('#progBar'), playPos:$('#playPos'), toast:$('#toast')
+};
+// play button keeps separate icon and label nodes so a ripple inside it survives a state change
+el.playBtn.innerHTML = '<span class="play-ico" style="display:inline-flex"></span><span class="play-lbl"></span>';
+el.playIcon = el.playBtn.querySelector('.play-ico');
+el.playLabel = el.playBtn.querySelector('.play-lbl');
+// sliding pill behind the note / rest tabs
+el.glider = document.createElement('span');
+el.glider.className = 'glider';
+(function(){ const seg = $('#kindNote').parentElement; seg.classList.add('glide'); seg.prepend(el.glider); })();
+function ripple(e){
+  const b = e.currentTarget, r = b.getBoundingClientRect(), s = document.createElement('span');
+  s.className = 'ripple';
+  s.style.left = (e.clientX - r.left) + 'px'; s.style.top = (e.clientY - r.top) + 'px';
+  b.appendChild(s);
+  setTimeout(()=>s.remove(), 600);
+}
+el.playBtn.addEventListener('pointerdown', ripple);
+$('#startBtn').addEventListener('pointerdown', ripple);
+
+/* ---------- icons ---------- */
+const flag = y => `<path d="M19 ${y}c.6 5 8.5 6.5 6.2 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`;
+const dot = (x,y) => `<circle cx="${x}" cy="${y}" r="2.2" fill="currentColor"/>`;
+// notehead centre sits at (13.5,36) — or (15,28) for the whole note — so ghosts can be aligned to a staff position
+function iconInner(u, rest){
+  const D = DUR[u]; let s = '';
+  if(!rest){
+    if(D.vf==='w') return `<ellipse cx="15" cy="28" rx="7.6" ry="5" transform="rotate(-12 15 28)" fill="none" stroke="currentColor" stroke-width="2.6"/>`;
+    const hollow = D.vf==='h';
+    s += `<ellipse cx="13.5" cy="36" rx="6" ry="4.3" transform="rotate(-22 13.5 36)" ${hollow?'fill="none" stroke="currentColor" stroke-width="2.1"':'fill="currentColor"'}/>`;
+    s += `<line x1="19" y1="35" x2="19" y2="8" stroke="currentColor" stroke-width="1.7"/>`;
+    if(D.vf==='8'||D.vf==='16') s += flag(8);
+    if(D.vf==='16') s += flag(14);
+    if(D.dots) s += dot(26,36);
+    return s;
+  }
+  const ln = y => `<line x1="4" y1="${y}" x2="30" y2="${y}" stroke="currentColor" stroke-width="1" opacity=".45"/>`;
+  if(D.vf==='w') return ln(20) + `<rect x="10" y="20" width="14" height="6" fill="currentColor"/>`;
+  if(D.vf==='h') return ln(28) + `<rect x="10" y="22" width="14" height="6" fill="currentColor"/>` + (D.dots?dot(28,24):'');
+  if(D.vf==='q') return `<path fill="currentColor" d="M13.5 8 21 17.5c-3 3-3.7 6-.5 10.5l1.5 2c-4-1.4-7.2 0-6 4.2.6 2.4 2 4.4 3.5 5.8-5-2-8-6-6.3-9.6 1.2-2.6 3.8-3 5.6-2.2l-6.6-8c3-2.8 3.6-6 1.3-9.2z"/>` + (D.dots?dot(27,26):'');
+  if(D.vf==='8') return `<circle cx="14" cy="19" r="3.4" fill="currentColor"/><path d="M14.5 21.5c3.5 1 7-1 9-5.5L16.5 40" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>` + (D.dots?dot(27,22):'');
+  return `<circle cx="15.5" cy="14" r="3.1" fill="currentColor"/><path d="M16 16.3c3.4.9 6.6-1 8.5-5.3L16 42" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12.5" cy="23.5" r="3.1" fill="currentColor"/><path d="M13 25.8c3.4.9 6.4-.8 8.8-4.8" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>`;
+}
+const icon = (u, rest) => `<svg viewBox="0 0 34 48" aria-hidden="true">${iconInner(u,rest)}</svg>`;
+const INST_ICON = {
+  piano:`<svg viewBox="0 0 46 58" aria-hidden="true"><rect x="2" y="15" width="42" height="28" rx="3" fill="none" stroke="currentColor" stroke-width="2.4"/>${[1,2,3,4,5].map(i=>`<line x1="${2+i*7}" y1="15" x2="${2+i*7}" y2="43" stroke="currentColor" stroke-width="1.4"/>`).join('')}${[0,1,3,4].map(i=>`<rect x="${2+(i+1)*7-2.3}" y="15" width="4.6" height="16" fill="currentColor"/>`).join('')}</svg>`,
+  recorder:`<svg viewBox="0 0 46 58" aria-hidden="true"><g transform="rotate(-28 23 29)"><path d="M19.5 2h7l1 8h-9z" fill="currentColor"/><rect x="19" y="10" width="8" height="40" rx="3.5" fill="currentColor" fill-opacity=".25" stroke="currentColor" stroke-width="2.2"/><path d="M18.5 49c1 5 8 5 9 0" fill="currentColor"/>${[17,22,27,32,37,42].map(y=>`<circle cx="23" cy="${y}" r="1.6" fill="currentColor"/>`).join('')}</g></svg>`
+};
+const PLAY_ICON = `<svg viewBox="0 0 18 18" aria-hidden="true"><path d="M4 2.5v13l11-6.5z" fill="currentColor"/></svg>`;
+const STOP_ICON = `<svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3.5" y="3.5" width="11" height="11" rx="1.5" fill="currentColor"/></svg>`;
+
+/* ---------- static controls ---------- */
+el.meters.innerHTML = Object.keys(METERS).map(m=>{
+  const [a,b] = m.split('/');
+  return `<button type="button" class="meter" role="radio" data-meter="${m}" aria-checked="false" aria-label="${m}박자"><span>${a}</span><span>${b}</span></button>`;
+}).join('');
+el.insts.innerHTML = INSTS.map(i=>`<button type="button" class="inst" role="radio" data-inst="${i.id}" aria-checked="false" style="--c:${i.color}">${INST_ICON[i.id]}${i.name}</button>`).join('');
+el.palette.innerHTML = DURS.map(d=>`<button type="button" class="pal" data-u="${d.u}"><span class="ic"></span><span class="dn"></span><span class="db"></span></button>`).join('');
+
+/* ---------- score rendering (VexFlow) ---------- */
+const ROWH = 118, TOPLINE = 40;
+let hit = {bars:[], notes:[]};
+let playing = null;
+let markerEl = null;
+let fx = null;   // {kind:'pop'|'beat', bar, idx, v?} — applied to one note by the next render, then cleared
+// Move the playback marker to the note being played. It glides within a row and jumps between rows.
+function placeMarker(glide){
+  if(!markerEl) return;
+  const hb = playing && hit.bars[playing.bar];
+  if(!hb){ markerEl.setAttribute('visibility','hidden'); markerEl.dataset.row = ''; return; }
+  let x, w = 30;
+  if(playing.idx>=0){ const nx = (hit.notes[playing.bar]||[])[playing.idx]; if(nx==null) return; x = nx - 9; }
+  else { x = hb.endX - 8; w = Math.max(20, hb.ne - hb.endX + 8); }
+  const y = hb.top - 26, sameRow = markerEl.dataset.row === String(hb.y);
+  markerEl.classList.toggle('jump', !(glide && sameRow));
+  markerEl.style.transform = `translate(${x}px,${y}px)`;
+  markerEl.setAttribute('width', w);
+  markerEl.dataset.row = String(hb.y);
+  markerEl.setAttribute('visibility','visible');
+}
+let ghostLayer = null, ghostState = null;
+const tok = (cs,n) => cs.getPropertyValue(n).trim();
+function svgEl(parent, tag, attrs, text){
+  const e = document.createElementNS(SVGNS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(text!=null) e.textContent = text;
+  parent.appendChild(e); return e;
+}
+let modCache = {};
+function modWidths(){
+  if(modCache.meter===S.meter && modCache.key===S.key) return modCache;
+  let e0 = 72, eN = 40, pad = 24;
+  try{
+    const plain = new VF.Stave(0,0,300), base = plain.getNoteStartX();
+    pad = base + (300 - plain.getNoteEndX());
+    eN = new VF.Stave(0,0,300).addClef('treble').addKeySignature(S.key).getNoteStartX() - base;
+    e0 = new VF.Stave(0,0,300).addClef('treble').addKeySignature(S.key).addTimeSignature(S.meter).getNoteStartX() - base;
+  }catch(e){}
+  return modCache = {meter:S.meter, key:S.key, e0, eN, pad};
+}
+function buildVoice(b, C, stave){
+  const M = METERS[S.meter];
+  const notes = S.bars[b].map((n,i)=>makeNote(n,b,i,C,stave));
+  const voice = new VF.Voice({num_beats:M.num, beat_value:M.den});
+  voice.setMode((VF.Voice.Mode && VF.Voice.Mode.SOFT) || 2);
+  voice.addTickables(notes);
+  try{ VF.Accidental.applyAccidentals([voice], S.key); }catch(e){}
+  return {notes, voice};
+}
+// Width the notes of bar b need so they never run past the barline (0 for an empty bar).
+function noteArea(b, C, dummy){
+  if(!S.bars[b].length) return 0;
+  let minW = S.bars[b].length*24;
+  try{
+    const {voice} = buildVoice(b, C, dummy);
+    const f = new VF.Formatter(); f.joinVoices([voice]);
+    minW = f.preCalculateMinTotalWidth([voice]);
+  }catch(e){}
+  return minW*1.3 + 10;
+}
+// Share row width equally, but never give a bar less than it needs.
+function fillWidths(mins, total){
+  const ws = mins.slice(), fixed = mins.map(()=>false);
+  for(;;){
+    const free = ws.map((_,i)=>i).filter(i=>!fixed[i]);
+    if(!free.length) return ws;
+    const share = (total - ws.reduce((a,w,i)=>a+(fixed[i]?w:0),0))/free.length;
+    const over = free.filter(i=>mins[i]>share);
+    if(!over.length){ free.forEach(i=>{ ws[i] = share; }); return ws; }
+    over.forEach(i=>{ fixed[i] = true; ws[i] = mins[i]; });
+  }
+}
+function attachDot(sn){
+  if(VF.Dot && VF.Dot.buildAndAttach) VF.Dot.buildAndAttach([sn],{all:true});
+  else if(sn.addDotToAll) sn.addDotToAll();
+}
+// A note's tones in drawing order (low to high); j is each tone's slot in pitchesOf(n)
+const sortedTones = n => pitchesOf(n).map((p,j)=>({k:p.k, m:p.m, j})).sort((a,c)=>diOfKey(a.k)-diOfKey(c.k) || a.m-c.m);
+function makeNote(n, b, i, C, stave){
+  const D = DUR[n.d], rest = n.m==null;
+  const ps = sortedTones(n);
+  const sn = new VF.StaveNote({
+    keys: rest ? [D.u>=16 ? 'd/5' : 'b/4'] : ps.map(p=>p.k),
+    duration: D.vf + (D.dots?'d':'') + (rest?'r':''),
+    auto_stem: !rest, clef:'treble'
+  });
+  if(D.dots) attachDot(sn);
+  if(sn.setAttribute) sn.setAttribute('id', `n${b}-${i}`);   // drawn as <g id="vf-n{bar}-{index}">, used to animate one note
+  const isSel = sel && sel.bar===b && sel.idx===i;
+  const chordSel = isSel && ps.length>1 && !!sn.setKeyStyle;   // in a chord only the chosen tone lights up
+  const col = (isSel && !chordSel) ? C.accent : C.ink;
+  sn.setStyle({fillStyle:col, strokeStyle:col});
+  if(chordSel){ const h = ps.findIndex(p=>p.j===(sel.v||0)); if(h>=0) sn.setKeyStyle(h, {fillStyle:C.accent, strokeStyle:C.accent}); }
+  if(sn.setLedgerLineStyle) sn.setLedgerLineStyle({fillStyle:col, strokeStyle:col, lineWidth:1.3});
+  sn.setStave(stave);
+  return sn;
+}
+function render(){
+  const host = el.score;
+  if(!VF){ host.innerHTML = '<p class="vf-fail">악보 그리는 도구를 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.</p>'; return; }
+  host.innerHTML = '';
+  const cs = getComputedStyle(document.documentElement);
+  const C = {ink:tok(cs,'--ink'), line:tok(cs,'--line'), accent:tok(cs,'--accent')};
+  const pcs = getComputedStyle(el.paper);
+  const paperW = el.paper.clientWidth - parseFloat(pcs.paddingLeft) - parseFloat(pcs.paddingRight);
+  const bpr = paperW >= 780 ? 4 : 2;
+  const M = METERS[S.meter], CAP = M.cap;
+  const {e0, eN, pad} = modWidths();
+  let W = Math.floor(Math.max(paperW, 150 + e0));
+  const NB = S.bars.length;
+
+  // 1) how wide each bar has to be for its notes
+  const dummy = new VF.Stave(0, 0, 2000);
+  const areas = [], mins = [];
+  for(let b=0;b<NB;b++){
+    const a = noteArea(b, C, dummy);
+    areas.push(a);
+    // a half-filled bar keeps some room after its last note for the next one
+    const room = used(b) < CAP ? 36 : 0;
+    mins.push(Math.max(150, a + room + pad + 14));
+  }
+  // 2) break into rows: up to bpr bars per row, fewer when crowded bars need the space
+  const rows = []; let cur = [], curW = 0;
+  for(let b=0;b<NB;b++){
+    if(cur.length && (cur.length>=bpr || curW + mins[b] > W - 1)){
+      rows.push(cur); cur = []; curW = 0;
+    }
+    cur.push(b); curW += mins[b] + (cur.length===1 ? (rows.length ? eN : e0) : 0);
+  }
+  rows.push(cur);
+  rows.forEach((row,r)=>{ const need = row.reduce((a,b)=>a+mins[b],0) + (r ? eN : e0) + 1; if(need > W) W = Math.ceil(need); });
+  // 3) widths and positions: equal shares where possible; a short last row keeps the normal bar width
+  const layout = [];
+  rows.forEach((row,r)=>{
+    const extra = r ? eN : e0, full = W - 1 - extra;
+    let total = full;
+    if(r===rows.length-1 && row.length<bpr) total = Math.max(full*row.length/bpr, row.reduce((a,b)=>a+mins[b],0));
+    const ws = fillWidths(row.map(b=>mins[b]), total);
+    let x = 0;
+    row.forEach((b,c)=>{
+      const w = ws[c] + (c===0 ? extra : 0);
+      layout[b] = {r, c, x, w};
+      x += w;
+    });
+  });
+
+  const renderer = new VF.Renderer(host, VF.Renderer.Backends.SVG);
+  renderer.resize(W, rows.length*ROWH);
+  const ctx = renderer.getContext();
+  ctx.setFillStyle(C.ink); ctx.setStrokeStyle(C.ink);
+  const svg = host.querySelector('svg');
+  svg.setAttribute('role','img');
+  svg.setAttribute('aria-label', `${S.meter}박자 ${NB}마디 악보`);
+  const BT = VF.Barline.type || VF.BarlineType;
+  hit = {bars:[], notes:[]};
+  // one playback marker, created first so it sits behind the notes; moved by placeMarker()
+  markerEl = svgEl(svg,'rect',{x:0,y:0,width:30,height:92,rx:6,class:'marker jump',visibility:'hidden'});
+
+  for(let b=0;b<NB;b++){
+    const {r, c, x, w} = layout[b];
+    const rowTop = r*ROWH;
+    const stave = new VF.Stave(x, rowTop + TOPLINE - 40, w);
+    if(c===0) stave.addClef('treble').addKeySignature(S.key);
+    if(b===0) stave.addTimeSignature(S.meter);
+    if(c!==0 && BT) stave.setBegBarType(BT.NONE);
+    if(b===NB-1 && BT) stave.setEndBarType(BT.END);
+    stave.setStyle({strokeStyle:C.line, fillStyle:C.line});
+    const top = stave.getYForLine(0), bot = stave.getYForLine(4);
+    stave.setContext(ctx).draw();
+
+    const bar = S.bars[b], u = used(b);
+    const ns = stave.getNoteStartX(), ne = stave.getNoteEndX();
+    const avail = ne - ns - 14;
+    let xs = [], endX = ns + 8;
+    if(bar.length){
+      const {notes, voice} = buildVoice(b, C, stave);
+      let beams = [];
+      try{ beams = VF.Beam.generateBeams(notes,{groups:VF.Beam.getDefaultBeamGroups(S.meter)}); }catch(e){}
+      // full bar: spread across the bar; partial bar: proportional to how full it is, but never narrower than the notes need
+      const fw = u>=CAP ? avail : Math.min(avail - 20, Math.max(28, avail*u/CAP, areas[b]));
+      new VF.Formatter().joinVoices([voice]).format([voice], fw);
+      xs = notes.map(n=>n.getAbsoluteX());
+      endX = Math.min(ne - 12, ns + fw + 14);
+      voice.draw(ctx, stave);
+      beams.forEach(bm=>{ bm.setStyle({fillStyle:C.ink,strokeStyle:C.ink}); bm.setContext(ctx).draw(); });
+    }
+    svgEl(svg,'text',{x:x+3,y:top-20,class:'barno'}, String(b+1));
+    const gy = bot + 28, gw = ne - ns;
+    svgEl(svg,'rect',{x:ns,y:gy,width:gw,height:3,rx:1.5,class:'gauge'});
+    if(u>0) svgEl(svg,'rect',{x:ns,y:gy,width:gw*u/CAP,height:3,rx:1.5,class:u>=CAP?'gauge-full':'gauge-part'});
+    hit.bars.push({b, x, y:rowTop, w, h:ROWH, top, bot, endX, ne});
+    hit.notes[b] = xs;
+  }
+  placeMarker(false);
+  // one-shot motion for the note that was just placed or selected
+  if(fx){
+    const g = svg.querySelector(`#vf-n${fx.bar}-${fx.idx}`), n = S.bars[fx.bar] && S.bars[fx.bar][fx.idx];
+    if(g && n){
+      let target = g;
+      if(fx.v!=null && pitchesOf(n).length>1){
+        const heads = g.querySelectorAll('.vf-notehead'), slot = sortedTones(n).findIndex(p=>p.j===fx.v);
+        if(heads[slot]) target = heads[slot];
+      }
+      target.classList.add(fx.kind);
+    }
+    fx = null;
+  }
+  ghostLayer = svgEl(svg,'g',{class:'ghost-layer'});
+  if(ghostState) drawGhost(ghostState);
+}
+
+/* ---------- ghost preview while carrying a note ---------- */
+function drawGhost(t){
+  ghostState = t;
+  if(!ghostLayer) return;
+  ghostLayer.innerHTML = '';
+  if(!t) return;
+  const hb = hit.bars[t.b]; if(!hb) return;
+  svgEl(ghostLayer,'rect',{x:hb.x+1,y:hb.top-34,width:hb.w-1,height:hb.bot-hb.top+64,rx:6,class:'ghost-bar'});
+  const g = svgEl(ghostLayer,'g',{class:'ghost'+(t.ok?'':' bad')});
+  let gx = hb.endX;
+  const ledgersAt = (di, x) => {
+    const ys = [];
+    if(di<=28) ys.push(hb.top+50);
+    for(let d=40; d<=di; d+=2) ys.push(hb.top-(d-38)*5);
+    ys.forEach(y=>svgEl(g,'line',{x1:x-3,y1:y,x2:x+15,y2:y}));
+  };
+  if(t.chord!=null){
+    // stacking onto an existing note: show just the new notehead on that note
+    const n = S.bars[t.b][t.chord], vf = DUR[n.d].vf;
+    gx = hit.notes[t.b][t.chord];
+    const gy = hb.top + (DI_TOP - t.di)*5;
+    ledgersAt(t.di, gx);
+    const hollow = vf==='h' || vf==='w';
+    svgEl(g,'ellipse',{cx:gx+6,cy:gy,rx:6,ry:4.3,transform:`rotate(-22 ${gx+6} ${gy})`,
+      fill:hollow?'none':'currentColor', stroke:'currentColor','stroke-width':hollow?2:0});
+    const k = keyOfDi(t.di);
+    svgEl(g,'text',{x:gx+20,y:gy-8}, t.ok ? `${nameOf(k)} 화음 추가 (${pitchesOf(n).length+1}/${MAX_CHORD})`
+      : t.why==='full' ? `화음은 ${MAX_CHORD}개까지` : '이미 있는 음');
+    return;
+  }
+  if(t.rest){
+    const n = svgEl(g,'svg',{x:gx-10,y:hb.top-4,width:34,height:48,viewBox:'0 0 34 48'});
+    n.innerHTML = iconInner(t.u,true);
+    svgEl(g,'text',{x:gx+26,y:hb.top+24}, t.ok ? '쉼표' : '자리가 모자라요');
+    return;
+  }
+  const gy = hb.top + (DI_TOP - t.di)*5;
+  ledgersAt(t.di, gx);
+  const whole = DUR[t.u].vf==='w';
+  const n = svgEl(g,'svg',{x:whole?gx-9:gx-7.5,y:gy-(whole?28:36),width:34,height:48,viewBox:'0 0 34 48'});
+  n.innerHTML = iconInner(t.u,false);
+  const k = keyOfDi(t.di);
+  svgEl(g,'text',{x:gx+28,y:gy+5}, t.ok ? `${nameOf(k)} ${codeOf(k)}` : '자리가 모자라요');
+}
+function svgPoint(e){
+  const svg = el.score.querySelector('svg'); if(!svg) return null;
+  const r = svg.getBoundingClientRect();
+  return {x:e.clientX - r.left, y:e.clientY - r.top};
+}
+function barAt(p){ return p && hit.bars.find(h => p.x>=h.x && p.x<=h.x+h.w && p.y>=h.y && p.y<=h.y+h.h); }
+const diAt = (hb, y) => clamp(DI_TOP - Math.round((y - hb.top)/5), DI_MIN, DI_MAX);
+function targetAt(e, u, rest){
+  const p = svgPoint(e), hb = barAt(p);
+  if(!hb) return null;
+  const di = diAt(hb, p.y);
+  if(!rest){
+    // dropped onto an existing note → add a chord tone (the chord keeps that note's length)
+    const ni = noteAt(hb, p), n = ni>=0 ? S.bars[hb.b][ni] : null;
+    if(n && n.m!=null){
+      const ps = pitchesOf(n), m = keyToMidi(keyOfDi(di));
+      const why = ps.length>=MAX_CHORD ? 'full' : ps.some(q=>q.m===m) ? 'dup' : '';
+      return {b:hb.b, di, u, rest, chord:ni, ok:!why, why};
+    }
+  }
+  return {b:hb.b, di, u, rest, ok: used(hb.b)+u <= cap()};
+}
+function noteAt(hb, p){
+  const xs = hit.notes[hb.b] || []; let best = -1, bd = 1e9;
+  xs.forEach((nx,i)=>{ const d = Math.abs(p.x-(nx+6)); if(d<bd){ bd = d; best = i; } });
+  return bd<=14 ? best : -1;
+}
+// A refused drop: the ghost stays for a moment and shakes, alongside the toast that says why
+let rejectT;
+function reject(t, msg){
+  toast(msg);
+  drawGhost(t);
+  const g = ghostLayer && ghostLayer.querySelector('.ghost');
+  if(g) g.classList.add('shake');
+  clearTimeout(rejectT);
+  rejectT = setTimeout(()=>{ if(ghostState===t) drawGhost(null); }, 600);
+}
+function place(t){
+  if(!t) return;
+  if(t.chord!=null){
+    const n = S.bars[t.b][t.chord];
+    if(!t.ok){ reject(t, t.why==='full' ? `화음은 음 ${MAX_CHORD}개까지만 쌓을 수 있어요` : '이미 있는 음이에요'); return; }
+    snapshot();
+    const k = keyOfDi(t.di);
+    (n.x = n.x || []).push({k, m:keyToMidi(k)});
+    preview(pitchesOf(n).map(q=>q.m), n.d);
+    sel = null;
+    tool = null;   // one note per pick-up: after it lands, touching the score edits notes instead of adding more
+    fx = {kind:'pop', bar:t.b, idx:t.chord, v:n.x.length};   // only the added tone pops
+    commit(); return;
+  }
+  if(!t.ok){ reject(t, `${t.b+1}마디에는 ${DUR[t.u][t.rest?'rest':'note']}가 들어갈 자리가 없어요`); return; }
+  snapshot();
+  if(t.rest) S.bars[t.b].push({m:null, d:t.u});
+  else { const k = keyOfDi(t.di), m = keyToMidi(k); S.bars[t.b].push({m, k, d:t.u}); preview(m, t.u); }
+  sel = null;
+  tool = null;
+  fx = {kind:'pop', bar:t.b, idx:S.bars[t.b].length-1};
+  commit();
+}
+
+/* ---------- pointer interaction ---------- */
+function paletteClick(u){
+  const rest = kind==='rest';
+  if(sel){
+    const n = S.bars[sel.bar][sel.idx];
+    if(used(sel.bar) - n.d + u > cap()){ toast('그 길이는 이 마디에 자리가 모자라요'); return; }
+    snapshot();
+    n.d = u;
+    if(rest && n.m!=null){ n.m = null; delete n.k; delete n.x; }
+    else if(!rest && n.m==null){ n.k = keyOfDi(diOfKey('b/4')); n.m = keyToMidi(n.k); }
+    commit(); return;
+  }
+  tool = (tool && tool.u===u && tool.rest===rest) ? null : {u, rest};
+  refresh();
+}
+el.palette.addEventListener('pointerdown', e=>{
+  const b = e.target.closest('.pal'); if(!b || e.button>0) return;
+  e.preventDefault();
+  drag = {kind:'palette', u:+b.dataset.u, rest:kind==='rest', sx:e.clientX, sy:e.clientY, moved:false};
+});
+el.score.addEventListener('pointerdown', e=>{
+  if(e.button>0) return;
+  const p = svgPoint(e), hb = barAt(p); if(!hb) return;
+  stop();
+  if(tool){
+    e.preventDefault();
+    drag = {kind:'place'};
+    drawGhost(targetAt(e, tool.u, tool.rest));
+    return;
+  }
+  const ni = noteAt(hb, p);
+  if(ni>=0){
+    e.preventDefault();
+    const n = S.bars[hb.b][ni], ps = pitchesOf(n);
+    // in a chord, pick the tone nearest to where the pointer went down
+    const yOf = q => hb.top + (DI_TOP - diOfKey(q.k))*5;
+    let v = 0;
+    ps.forEach((q,i)=>{ if(Math.abs(yOf(q)-p.y) < Math.abs(yOf(ps[v])-p.y)) v = i; });
+    sel = {bar:hb.b, idx:ni, v};
+    fx = {kind:'beat', bar:hb.b, idx:ni, v};
+    if(ps.length) preview(ps.map(q=>q.m));
+    drag = {kind:'note', bar:hb.b, idx:ni, v, sy:e.clientY, moved:false, lastDi: ps.length ? diOfKey(ps[v].k) : null};
+  } else sel = null;
+  refresh();
+});
+el.score.addEventListener('pointermove', e=>{
+  if(!drag && tool && e.pointerType==='mouse') drawGhost(targetAt(e, tool.u, tool.rest));
+});
+el.score.addEventListener('pointerleave', ()=>{ if(!drag) drawGhost(null); });
+// Touch: a finger that lands on a placed note (or while carrying a note) must drag that note, not scroll the page.
+// Anywhere else on the score the page still scrolls as usual.
+el.score.addEventListener('touchstart', e=>{
+  const t = e.touches[0]; if(!t) return;
+  const p = svgPoint(t), hb = barAt(p);
+  if(hb && (tool || noteAt(hb, p) >= 0)) e.preventDefault();
+}, {passive:false});
+document.addEventListener('pointermove', e=>{
+  if(!drag) return;
+  if(drag.kind==='palette'){
+    if(!drag.moved && Math.hypot(e.clientX-drag.sx, e.clientY-drag.sy) > 6){
+      drag.moved = true;
+      el.floater.innerHTML = icon(drag.u, drag.rest);
+    }
+    if(!drag.moved) return;
+    const t = targetAt(e, drag.u, drag.rest);
+    drawGhost(t);
+    el.floater.hidden = !!t;
+    el.floater.style.left = e.clientX + 'px'; el.floater.style.top = e.clientY + 'px';
+  } else if(drag.kind==='place'){
+    if(tool) drawGhost(targetAt(e, tool.u, tool.rest));
+  } else if(drag.kind==='note' && drag.lastDi!=null){
+    if(!drag.moved && Math.abs(e.clientY-drag.sy) < 4) return;
+    const hb = hit.bars[drag.bar], p = svgPoint(e);
+    const di = diAt(hb, p.y);
+    if(di===drag.lastDi) return;
+    if(!drag.moved){ drag.moved = true; snapshot(); }
+    drag.lastDi = di;
+    const n = S.bars[drag.bar][drag.idx], k = keyOfDi(di);
+    setPitch(n, drag.v, k);
+    preview(keyToMidi(k), 0, 0.25);
+    refresh();
+  }
+});
+function endDrag(e, cancelled){
+  if(!drag) return;
+  const d = drag; drag = null;
+  el.floater.hidden = true;
+  if(d.kind==='palette'){
+    const t = (d.moved && !cancelled) ? targetAt(e, d.u, d.rest) : null;
+    drawGhost(null);
+    if(!d.moved){ if(!cancelled) paletteClick(d.u); }
+    else place(t);
+  } else if(d.kind==='place'){
+    const t = (cancelled || !tool) ? null : targetAt(e, tool.u, tool.rest);
+    drawGhost(null);
+    place(t);
+  } else if(d.kind==='note' && d.moved){ commit(); }
+}
+document.addEventListener('pointerup', e=>endDrag(e,false));
+document.addEventListener('pointercancel', e=>endDrag(e,true));
+
+/* ---------- selected-note actions ---------- */
+// The selected tone: the note itself, or the chosen tone of a chord
+function selTone(){
+  const n = sel && S.bars[sel.bar][sel.idx]; if(!n || n.m==null) return null;
+  const ps = pitchesOf(n), v = Math.min(sel.v||0, ps.length-1);
+  return {n, v, p:ps[v]};
+}
+function moveSel(step){
+  const s = selTone(); if(!s) return;
+  const k = keyOfDi(clamp(diOfKey(s.p.k)+step, DI_MIN, DI_MAX));
+  snapshot(); setPitch(s.n, s.v, k); preview(keyToMidi(k)); commit();
+}
+function setAcc(a){
+  const s = selTone(); if(!s) return;
+  const k = keyOfDi(diOfKey(s.p.k), a);
+  snapshot(); setPitch(s.n, s.v, k); preview(keyToMidi(k)); commit();
+}
+// whole=false on a chord removes only the chosen tone
+function deleteSel(whole){
+  if(!sel) return;
+  const s = selTone();
+  snapshot();
+  if(!whole && s && pitchesOf(s.n).length>1){ removePitch(s.n, s.v); sel.v = 0; }
+  else { S.bars[sel.bar].splice(sel.idx,1); sel = null; }
+  commit();
+}
+el.hint.addEventListener('click', e=>{
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const a = b.dataset.act;
+  if(a==='up') moveSel(1); else if(a==='down') moveSel(-1);
+  else if(a==='sharp') setAcc('#'); else if(a==='flat') setAcc('b'); else if(a==='nat') setAcc('');
+  else if(a==='del') deleteSel(true);
+  else if(a==='deltone') deleteSel(false);
+  else if(a==='drop'){ tool = null; refresh(); }
+  else if(a==='desel'){ sel = null; refresh(); }
+});
+function undo(){
+  const h = history.pop(); if(!h){ toast('더 되돌릴 것이 없어요'); return; }
+  const o = JSON.parse(h); S.key = o.key || 'C'; S.meter = o.meter; S.bars = o.bars; sel = null; modCache = {};
+  commit();
+}
+function setMeter(m){ snapshot(); S.meter = m; S.bars = emptyBars(S.bars.length); sel = null; modCache = {}; commit(); }
+// More bars are added empty at the end; fewer bars drop the last ones
+function setBarCount(n){
+  if(n===S.bars.length) return;
+  snapshot();
+  S.bars = n > S.bars.length ? S.bars.concat(emptyBars(n - S.bars.length)) : S.bars.slice(0, n);
+  sel = null;
+  commit();
+}
+// Changing the key re-reads written notes against the new key signature; notes with their own accidental keep it
+function setKey(k){
+  if(k===S.key || !KEYS[k]) return;
+  snapshot();
+  const oldSig = KEYS[S.key].sig, newSig = KEYS[k].sig;
+  S.bars.forEach(bar=>bar.forEach(n=>{
+    pitchesOf(n).forEach((p,v)=>{
+      const l = p.k[0];
+      if(accOf(p.k)===(oldSig[l]||'')) setPitch(n, v, l + (newSig[l]||'') + '/' + p.k.split('/')[1]);
+    });
+  }));
+  S.key = k; modCache = {};
+  commit();
+}
+let toastT;
+function toast(msg){
+  el.toast.textContent = msg; el.toast.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(()=>{ el.toast.hidden = true; }, 2600);
+}
+
+/* ---------- UI refresh ---------- */
+function refresh(){
+  render();
+  el.meters.querySelectorAll('.meter').forEach(b=>b.setAttribute('aria-checked', String(b.dataset.meter===S.meter)));
+  el.meterDesc.textContent = `${S.meter}박자 — ${METERS[S.meter].desc}`;
+  el.keySel.value = S.key;
+  el.barCounts.querySelectorAll('.bc').forEach(b=>b.setAttribute('aria-checked', String(+b.dataset.n===S.bars.length)));
+  const K = KEYS[S.key], sigL = Object.keys(K.sig);
+  const sigText = sigL.length
+    ? `조표 ${K.sig[sigL[0]]==='#'?'♯':'♭'} ${sigL.length}개 (${sigL.map(l=>NAMES[l]).join(', ')})`
+    : '조표 없음';
+  el.keyDesc.textContent = `으뜸음 ${nameOf(K.tonic)} · ${sigText} · 으뜸음으로 끝내면 가락이 안정감 있게 끝나요`;
+  el.bpm.value = S.bpm; el.bpmOut.textContent = S.bpm;
+  const T = termOf(S.term);
+  if(T){
+    el.tempoKo.textContent = T.group;
+    el.tempoIt.textContent = `${T.it} (${T.kr}) · ${T.lo}~${T.hiLabel || T.hi}` + (T.note ? ` · ${T.note}` : '');
+  } else {
+    el.tempoKo.textContent = '느리게와 보통 빠르기 사이';
+    el.tempoIt.textContent = '정해진 빠르기말이 없는 구간이에요';
+  }
+  el.tempoTerms.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', String(c.dataset.it===S.term)));
+  $('#kindNote').setAttribute('aria-pressed', String(kind==='note'));
+  $('#kindRest').setAttribute('aria-pressed', String(kind==='rest'));
+  el.palette.querySelectorAll('.pal').forEach(btn=>{
+    const u = +btn.dataset.u, D = DUR[u], rest = kind==='rest', key = kind + S.meter;
+    if(btn.dataset.k!==key){
+      btn.dataset.k = key;
+      btn.querySelector('.ic').innerHTML = icon(u, rest);
+      btn.querySelector('.dn').textContent = rest ? D.rest : D.note;
+      btn.querySelector('.db').textContent = beats(u);
+      btn.setAttribute('aria-label', `${rest?D.rest:D.note}, ${beats(u)}`);
+    }
+    btn.classList.toggle('armed', !!(tool && tool.u===u && tool.rest===rest));
+  });
+  el.paper.classList.toggle('armed', !!tool);
+  el.paper.classList.toggle('grab', !!(tool || sel));
+  let h;
+  if(sel){
+    const n = S.bars[sel.bar][sel.idx], s = selTone(), chord = pitchesOf(n).length>1;
+    const what = n.m==null ? DUR[n.d].rest
+      : chord ? `화음 ${chordName(n)} · ${DUR[n.d].note} → 고른 음 ${nameOf(s.p.k)} ${codeOf(s.p.k)}`
+      : `${nameOf(n.k)} ${codeOf(n.k)} · ${DUR[n.d].note}`;
+    h = `<strong>${sel.bar+1}마디: ${what}</strong>`;
+    if(n.m!=null) h += `<button class="btn" data-act="up" type="button" aria-label="한 칸 위로">▲</button><button class="btn" data-act="down" type="button" aria-label="한 칸 아래로">▼</button><button class="btn" data-act="sharp" type="button">♯</button><button class="btn" data-act="flat" type="button">♭</button><button class="btn" data-act="nat" type="button">♮</button>`;
+    h += chord
+      ? `<button class="btn" data-act="deltone" type="button">이 음 빼기</button><button class="btn" data-act="del" type="button">화음 지우기</button>`
+      : `<button class="btn" data-act="del" type="button">지우기</button>`;
+    h += `<button class="btn" data-act="desel" type="button">완료</button>`;
+  } else if(tool){
+    const D = DUR[tool.u];
+    h = `<strong>${tool.rest?D.rest:D.note}</strong>를 들고 있어요. 빈 자리를 누르면 그 높이에 놓이고, 놓은 음 위를 누르면 <strong>화음</strong>으로 쌓여요. <button class="btn" data-act="drop" type="button">내려놓기</button>`;
+  } else {
+    h = '위의 음표를 <strong>악보로 가져다 놓으세요</strong>. 놓은 음은 <strong>눌러서 위아래로 끌면</strong> 그 음만 높이가 바뀌어요. 화음은 위에서 음표를 다시 가져와 놓은 음 위에 겹쳐요(3개까지).';
+  }
+  el.hint.innerHTML = h;
+  $('#undoBtn').disabled = !history.length;
+  $('#clearAllBtn').disabled = !S.bars.some(b=>b.length);
+  el.insts.querySelectorAll('.inst').forEach(b=>b.setAttribute('aria-checked', String(b.dataset.inst===S.inst)));
+  el.metro.checked = S.metro;
+  el.drums.checked = S.drums;
+  // play ↔ stop: redraw the button only when the state changes, so the new icon can swap in
+  const pst = playState ? 'stop' : 'play';
+  if(el.playBtn.dataset.state !== pst){
+    const first = !el.playBtn.dataset.state;
+    el.playBtn.dataset.state = pst;
+    el.playBtn.className = 'play' + (playState ? ' stop' : '');
+    el.playIcon.innerHTML = playState ? STOP_ICON : PLAY_ICON;
+    el.playLabel.textContent = playState ? '정지' : '재생';
+    if(!first) el.playIcon.firstElementChild.classList.add('swap');
+  }
+  // note / rest tab indicator
+  const act = kind==='note' ? $('#kindNote') : $('#kindRest');
+  el.glider.style.width = act.offsetWidth + 'px';
+  el.glider.style.transform = `translateX(${act.offsetLeft}px)`;
+}
+
+/* ---------- control events ---------- */
+el.meters.addEventListener('click', e=>{
+  const b = e.target.closest('.meter'); if(!b) return;
+  const m = b.dataset.meter; if(m===S.meter){ el.meterConfirm.hidden = true; return; }
+  if(S.bars.some(x=>x.length)) askConfirm(`${m}박자로 바꾸면 지금 쓴 악보가 지워져요. (되돌리기로 되살릴 수 있어요)`, ()=>setMeter(m));
+  else setMeter(m);
+});
+function askConfirm(text, run){
+  pendingAction = run;
+  el.meterConfirmText.textContent = text;
+  el.meterConfirm.hidden = false;
+}
+$('#meterYes').onclick = ()=>{ const run = pendingAction; pendingAction = null; el.meterConfirm.hidden = true; if(run) run(); };
+$('#meterNo').onclick = ()=>{ pendingAction = null; el.meterConfirm.hidden = true; };
+el.barCounts.innerHTML = BAR_CHOICES.map(n=>`<button type="button" class="bc" role="radio" data-n="${n}" aria-checked="false">${n}마디</button>`).join('');
+el.barCounts.addEventListener('click', e=>{
+  const b = e.target.closest('.bc'); if(!b) return;
+  const n = +b.dataset.n; if(n===S.bars.length){ el.meterConfirm.hidden = true; return; }
+  const lost = S.bars.slice(n).some(x=>x.length);
+  if(lost) askConfirm(`${n}마디로 줄이면 ${n+1}~${S.bars.length}마디에 쓴 음표가 지워져요. (되돌리기로 되살릴 수 있어요)`, ()=>setBarCount(n));
+  else { el.meterConfirm.hidden = true; setBarCount(n); }
+});
+el.bpm.addEventListener('input', ()=>{ S.bpm = +el.bpm.value; S.term = termFor(S.bpm, S.term); stop(); refresh(); });
+el.tempoTerms.innerHTML = TEMPO_GROUPS.map(g=>`<div class="tgroup"><span>${g.ko}</span><div>${g.terms.map(t=>
+  `<button type="button" class="chip" data-it="${t.it}" aria-pressed="false" title="${t.kr}${t.note?' · '+t.note:''}"><b>${t.it}</b><small>${t.lo}~${t.hiLabel || t.hi}</small></button>`).join('')}</div></div>`).join('');
+el.tempoTerms.addEventListener('click', e=>{
+  const c = e.target.closest('.chip'); if(!c) return;
+  const t = termOf(c.dataset.it); S.term = t.it; S.bpm = t.v; stop(); refresh();
+});
+el.keySel.addEventListener('change', ()=>setKey(el.keySel.value));
+$('#kindNote').onclick = ()=>{ kind = 'note'; if(tool) tool = null; refresh(); };
+$('#kindRest').onclick = ()=>{ kind = 'rest'; if(tool) tool = null; refresh(); };
+el.palette.addEventListener('keydown', e=>{
+  const b = e.target.closest('.pal');
+  if(b && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); paletteClick(+b.dataset.u); }
+});
+$('#undoBtn').onclick = undo;
+$('#clearAllBtn').onclick = ()=>{ snapshot(); S.bars = emptyBars(S.bars.length); sel = null; commit(); toast('모두 지웠어요 — 되돌리기로 되살릴 수 있어요'); };
+el.insts.addEventListener('click', e=>{ const b = e.target.closest('.inst'); if(!b) return; S.inst = b.dataset.inst; stop(); refresh(); preview(67, 6); });
+el.metro.onchange = ()=>{ S.metro = el.metro.checked; };
+el.drums.onchange = ()=>{
+  S.drums = el.drums.checked;
+  // drums are always scheduled on their own bus, so switching them during playback takes effect at once
+  if(playState){ const g = playState.drumBus.gain, now = ac.currentTime; g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(S.drums ? 1 : 0, now + 0.03); }
+};
+el.playBtn.onclick = ()=>{ playState ? stop() : play(); };
+document.addEventListener('keydown', e=>{
+  const t = e.target; if(t && t.tagName==='INPUT') return;
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); undo(); }
+  else if(sel && (e.key==='Delete'||e.key==='Backspace')){ e.preventDefault(); deleteSel(false); }
+  else if(sel && e.key==='ArrowUp'){ e.preventDefault(); moveSel(1); }
+  else if(sel && e.key==='ArrowDown'){ e.preventDefault(); moveSel(-1); }
+  else if(e.key==='Escape'){ sel = null; tool = null; drawGhost(null); refresh(); }
+});
+
+/* ---------- audio engine ---------- */
+let ac = null, master = null, noiseBuf = null, waves = {};
+function mkWave(amps){
+  const re = new Float32Array(amps.length+1), im = new Float32Array(amps.length+1);
+  amps.forEach((a,i)=>{ im[i+1] = a; });
+  return ac.createPeriodicWave(re, im);
+}
+function ensureAudio(){
+  if(!ac){
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    const comp = ac.createDynamicsCompressor();
+    comp.threshold.value = -16; comp.knee.value = 10; comp.ratio.value = 3; comp.attack.value = 0.003; comp.release.value = 0.2;
+    master = ac.createGain(); master.gain.value = 0.9;
+    master.connect(comp); comp.connect(ac.destination);
+    noiseBuf = ac.createBuffer(1, ac.sampleRate*2, ac.sampleRate);
+    const d = noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+    waves.pianoBody = mkWave([1,.55,.32,.2,.12,.08,.05,.03,.02,.012]);
+    waves.pianoBright = mkWave([0,.3,.45,.4,.34,.28,.22,.18,.14,.1,.08,.06,.045,.035]);
+    waves.recorder = mkWave([1,.16,.09,.035,.02,.01]);
+    loadPiano();
+  }
+  if(ac.state==='suspended') ac.resume();
+}
+
+/* Grand piano samples (Salamander Grand Piano, CC BY 3.0), one every minor third from C4 to C6,
+   embedded as base64 so the page works offline and inside the artifact sandbox. */
+const PIANO_B64 = {};/*@@PIANO_SAMPLES@@*/
+const PIANO_ROOTS = {C4:60, Ds4:63, Fs4:66, A4:69, C5:72, Ds5:75, Fs5:78, A5:81, C6:84};
+const piano = {bufs:[], ready:null};
+function loadPiano(){
+  if(piano.ready) return piano.ready;
+  const jobs = Object.keys(PIANO_ROOTS).filter(n=>PIANO_B64[n]).map(n=>{
+    const bin = atob(PIANO_B64[n]), bytes = new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+    return new Promise((res, rej)=>ac.decodeAudioData(bytes.buffer, res, rej)).then(buf=>{
+      // skip the mp3 encoder's leading silence so every note sounds exactly on its beat
+      const d = buf.getChannelData(0); let i = 0;
+      while(i<d.length && Math.abs(d[i])<0.003) i++;
+      piano.bufs.push({root:PIANO_ROOTS[n], buf, offset:Math.max(0, i/buf.sampleRate - 0.001)});
+    }).catch(()=>{});
+  });
+  return piano.ready = Promise.all(jobs);
+}
+function biq(type, f, Q, gain){ const b = ac.createBiquadFilter(); b.type = type; b.frequency.value = f; if(Q!=null) b.Q.value = Q; if(gain!=null) b.gain.value = gain; return b; }
+function chain(...n){ for(let i=0;i<n.length-1;i++) n[i].connect(n[i+1]); return n[0]; }
+function gainNode(v, dest){ const g = ac.createGain(); g.gain.value = v; if(dest) g.connect(dest); return g; }
+function osc(wave, f, t, end, dest, cents){
+  const o = ac.createOscillator(); o.setPeriodicWave(wave); o.frequency.value = f;
+  if(cents) o.detune.value = cents;
+  o.connect(dest); o.start(t); o.stop(end + 0.02); return o;
+}
+function noise(t, stopAt, dest){
+  const s = ac.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+  s.connect(dest); s.start(t, Math.random()*1.5); s.stop(stopAt); return s;
+}
+// Envelope that lands on exactly 0 at `end`, so a note never spills into the next note or rest.
+function envExact(p, t, end, att, peak, sus, tau, rel){
+  const a = Math.min(att, (end-t)*0.4), ta = t + a;
+  p.setValueAtTime(0, t);
+  p.linearRampToValueAtTime(peak, ta);
+  p.setTargetAtTime(sus, ta, tau);
+  const rs = Math.max(ta, end - rel);
+  p.setValueAtTime(sus + (peak-sus)*Math.exp(-(rs-ta)/tau), rs);
+  p.linearRampToValueAtTime(0, end);
+}
+const INSTR = {
+  piano(dest, f, t, end){
+    if(!piano.bufs.length) return INSTR.pianoSynth(dest, f, t, end);
+    const m = 69 + 12*Math.log2(f/440);
+    let s = piano.bufs[0];
+    for(const b of piano.bufs) if(Math.abs(b.root-m) < Math.abs(s.root-m)) s = b;
+    const src = ac.createBufferSource();
+    src.buffer = s.buf;
+    src.playbackRate.value = Math.pow(2, (m - s.root)/12);
+    // the key is held for exactly the written length, then the damper falls
+    const dur = end - t, rel = Math.min(0.08, dur*0.3);
+    const g = gainNode(0, dest);
+    g.gain.setValueAtTime(0.95, t);
+    g.gain.setValueAtTime(0.95, end - rel);
+    g.gain.linearRampToValueAtTime(0, end);
+    src.connect(g);
+    src.start(t, s.offset);
+    src.stop(end + 0.01);
+  },
+  pianoSynth(dest, f, t, end){
+    const dur = end - t, rel = Math.min(0.06, dur*0.3);
+    const out = gainNode(0.46, dest);
+    const lp = biq('lowpass', Math.min(15000, f*16), 0.6);
+    lp.frequency.setValueAtTime(Math.min(15000, f*16), t);
+    lp.frequency.setTargetAtTime(clamp(f*5, 900, 9000), t+0.005, 0.4);
+    lp.connect(out);
+    const tau = clamp(1.3*Math.sqrt(262/f), 0.35, 2.2);
+    const body = gainNode(0, lp);
+    osc(waves.pianoBody, f, t, end, body, 0);
+    osc(waves.pianoBody, f, t, end, body, 3.5);
+    envExact(body.gain, t, end, 0.004, 0.5, 0, tau, rel);
+    const bright = gainNode(0, lp);
+    osc(waves.pianoBright, f, t, end, bright, -2);
+    envExact(bright.gain, t, end, 0.003, 0.45, 0, 0.11, rel);
+    const hg = gainNode(0, out);
+    const hb = biq('bandpass', Math.min(5000, f*5), 0.9); hb.connect(hg);
+    noise(t, Math.min(end, t+0.06), hb);
+    hg.gain.setValueAtTime(0, t); hg.gain.linearRampToValueAtTime(0.16, t+0.002); hg.gain.setTargetAtTime(0, t+0.002, 0.01);
+  },
+  recorder(dest, f0, t, end){
+    const f = f0*2, dur = end - t, rel = Math.min(0.04, dur*0.2);
+    const out = gainNode(0.34, dest);
+    const lp = biq('lowpass', 6000, 0.5); lp.connect(out);
+    const env = gainNode(0, lp);
+    const o = ac.createOscillator(); o.setPeriodicWave(waves.recorder);
+    o.frequency.setValueAtTime(f*0.985, t);
+    o.frequency.exponentialRampToValueAtTime(f, t + Math.min(0.04, dur*0.5));
+    o.connect(env); o.start(t); o.stop(end + 0.02);
+    if(dur > 0.5){
+      const vib = ac.createOscillator(); vib.frequency.value = 4.8;
+      const vg = gainNode(0); vg.gain.setValueAtTime(0, t+0.3); vg.gain.linearRampToValueAtTime(f*0.0025, t+0.5);
+      vib.connect(vg); vg.connect(o.frequency); vib.start(t); vib.stop(end + 0.02);
+    }
+    const bg = gainNode(0.5, env); const bb = biq('bandpass', f, 10); bb.connect(bg); noise(t, end + 0.02, bb);
+    const cg = gainNode(0, lp); const cb = biq('bandpass', Math.min(9000, f*3), 2); cb.connect(cg);
+    noise(t, Math.min(end, t+0.06), cb);
+    cg.gain.setValueAtTime(0, t); cg.gain.linearRampToValueAtTime(0.22, t+0.004); cg.gain.setTargetAtTime(0, t+0.004, 0.012);
+    envExact(env.gain, t, end, 0.03, 1, 0.85, 0.06, rel);
+  }
+};
+function click(dest, t, level){
+  const o = ac.createOscillator(); o.type = 'sine';
+  o.frequency.value = level===2 ? 1900 : level===1 ? 1500 : 1150;
+  const g = gainNode(0, dest);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(level===2 ? 0.5 : 0.3, t+0.001);
+  g.gain.exponentialRampToValueAtTime(0.0008, t+0.045);
+  o.connect(g); o.start(t); o.stop(t+0.06);
+}
+const DRUM = {
+  kick(dest, t, v){
+    const o = ac.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t+0.12);
+    const g = gainNode(0, dest);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.9*v, t+0.003); g.gain.exponentialRampToValueAtTime(0.001, t+0.32);
+    o.connect(g); o.start(t); o.stop(t+0.34);
+  },
+  snare(dest, t, v){
+    const ng = gainNode(0, dest), hp = biq('highpass', 1400, 0.7); hp.connect(ng);
+    noise(t, t+0.2, hp);
+    ng.gain.setValueAtTime(0, t); ng.gain.linearRampToValueAtTime(0.32*v, t+0.002); ng.gain.exponentialRampToValueAtTime(0.001, t+0.17);
+    const o = ac.createOscillator(); o.type = 'triangle'; o.frequency.setValueAtTime(200, t); o.frequency.exponentialRampToValueAtTime(150, t+0.08);
+    const tg = gainNode(0, dest);
+    tg.gain.setValueAtTime(0, t); tg.gain.linearRampToValueAtTime(0.3*v, t+0.002); tg.gain.exponentialRampToValueAtTime(0.001, t+0.1);
+    o.connect(tg); o.start(t); o.stop(t+0.12);
+  },
+  hat(dest, t, v){
+    const g = gainNode(0, dest), hp = biq('highpass', 7500, 0.7); hp.connect(g);
+    noise(t, t+0.06, hp);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.13*v, t+0.001); g.gain.exponentialRampToValueAtTime(0.001, t+0.05);
+  }
+};
+// Drum hits for the whole piece as schedule items (t = seconds from the start of the music)
+function drumItems(lengthU, s){
+  const CAP = cap(), P = DRUMS[S.meter], six = S.meter==='6/8', items = [];
+  for(let bar=0; bar*CAP < lengthU; bar++){
+    const b0 = bar*CAP*s;
+    P.K.forEach(p=>items.push({t:b0 + p*s, go:(pl,at)=>DRUM.kick(pl.drumBus, at, p===0 ? 1 : 0.8)}));
+    P.S.forEach(p=>items.push({t:b0 + p*s, go:(pl,at)=>DRUM.snare(pl.drumBus, at, 1)}));
+    P.H.forEach(p=>items.push({t:b0 + p*s, go:(pl,at)=>DRUM.hat(pl.drumBus, at, (six ? p%6===0 : p%4===0) ? 1 : 0.6)}));
+  }
+  return items;
+}
+const sixteenth = () => 60 / S.bpm / 4;
+// Several simultaneous tones share one gain so a chord is not louder than it should be
+function chordBus(dest, count){ return count>1 ? gainNode(1/Math.sqrt(count), dest) : dest; }
+function preview(m, u, len){
+  ensureAudio();
+  const t = ac.currentTime + 0.02;
+  const l = len || (u ? Math.min(0.9, u*sixteenth()) : 0.45);
+  const ms = Array.isArray(m) ? m : [m], dest = chordBus(master, ms.length);
+  ms.forEach(x=>INSTR[S.inst](dest, mtof(x), t, t + Math.max(0.12, l)));
+}
+
+/* ---------- playback ---------- */
+let playState = null, raf = 0;
+let starting = false;
+async function play(){
+  let last = -1; S.bars.forEach((b,i)=>{ if(b.length) last = i; });
+  if(last<0){ toast('악보가 비어 있어요. ③에서 음표를 먼저 놓아 주세요.'); return; }
+  if(starting) return;
+  ensureAudio();
+  if(S.inst==='piano'){ starting = true; try{ await loadPiano(); } finally { starting = false; } }
+  if(playState) return;
+  sel = null; tool = null;
+  const s = sixteenth(), CAP = cap(), inst = S.inst;
+  const bus = ac.createGain(); bus.connect(master);
+  const t0 = ac.currentTime + 0.15;
+  // Build the whole piece as a time-ordered list first. Nothing sounds yet: pump() hands the items to the
+  // audio clock a little ahead of time, so a long piece full of chords never floods the audio engine at once.
+  const events = [], items = []; let pos = 0;   // pos in 16th units — exact integer grid, no drift
+  for(let b=0;b<=last;b++){
+    let u = 0;
+    S.bars[b].forEach((n,i)=>{
+      const start = pos*s, len = n.d*s, ms = pitchesOf(n).map(q=>q.m);
+      events.push({t:start, end:start+len, bar:b, idx:i});
+      if(ms.length) items.push({t:start, go:(pl,at)=>{ const dest = chordBus(pl.bus, ms.length); ms.forEach(m=>INSTR[inst](dest, mtof(m), at, at+len)); }});
+      pos += n.d; u += n.d;
+    });
+    if(u<CAP){ events.push({t:pos*s, end:(pos+CAP-u)*s, bar:b, idx:-1}); pos += CAP-u; }
+  }
+  const bu = S.meter==='6/8' ? 2 : 4;   // metronome: ♩ for x/4, ♪ for 6/8
+  if(S.metro) for(let p=0; p<pos; p+=bu){
+    const inBar = p % CAP, level = inBar===0 ? 2 : (S.meter==='6/8' && inBar===6) ? 1 : 0;
+    items.push({t:p*s, go:(pl,at)=>click(pl.bus, at, level)});
+  }
+  drumItems(pos, s).forEach(it=>items.push(it));
+  items.sort((a,b)=>a.t-b.t);
+  const drumBus = gainNode(S.drums ? 1 : 0, bus);
+  playState = {bus, drumBus, t0, total:pos*s, events, beat:bu*s, barLen:CAP*s, items, next:0, timer:0};
+  playing = null;
+  pump();
+  playState.timer = setInterval(pump, PUMP_MS);
+  refresh();
+  tick();
+}
+// Each item still gets its exact start time on the audio clock (t0 + t), so timing is as strict as before;
+// only the moment it is handed over changes. AHEAD is longer than a background tab's 1 s timer throttle.
+const AHEAD = 1.5, PUMP_MS = 200;
+function pump(){
+  const P = playState; if(!P) return;
+  const horizon = ac.currentTime - P.t0 + AHEAD;
+  while(P.next < P.items.length && P.items[P.next].t <= horizon){
+    const it = P.items[P.next++];
+    it.go(P, P.t0 + it.t);
+  }
+}
+function tick(){
+  if(!playState) return;
+  const P = playState;
+  const now = ac.currentTime - (ac.outputLatency || ac.baseLatency || 0) - P.t0;
+  if(now >= P.total){ stop(true); return; }
+  if(now >= 0){
+    let ev = null;
+    for(const e of P.events){ if(now>=e.t && now<e.end){ ev = e; break; } }
+    if(ev && (!playing || playing.bar!==ev.bar || playing.idx!==ev.idx)){ playing = {bar:ev.bar, idx:ev.idx}; placeMarker(true); }
+    const bar = Math.floor(now / P.barLen), beat = Math.floor((now - bar*P.barLen)/P.beat) + 1;
+    el.playPos.textContent = `${bar+1}마디 · ${beat}박째`;
+    el.progBar.style.width = (now/P.total*100).toFixed(2) + '%';
+  }
+  raf = requestAnimationFrame(tick);
+}
+function stop(finished){
+  if(!playState) return;
+  cancelAnimationFrame(raf);
+  clearInterval(playState.timer);
+  const bus = playState.bus, now = ac.currentTime;
+  bus.gain.cancelScheduledValues(now);
+  bus.gain.setValueAtTime(bus.gain.value, now);
+  bus.gain.linearRampToValueAtTime(0, now + 0.03);
+  setTimeout(()=>{ try{ bus.disconnect(); }catch(e){} }, 150);
+  playState = null; playing = null;
+  el.progBar.style.width = finished===true ? '100%' : '0%';
+  el.playPos.textContent = finished===true ? '끝! 다시 들으려면 재생을 눌러요' : '멈췄어요';
+  refresh();
+}
+
+/* ---------- cover ---------- */
+/* ---------- motion switch ----------
+   Starts from the device's reduced-motion setting; the on-page switch overrides it and is remembered on this browser. */
+const MOTION_KEY = 'doremi-motion';
+let motionOn = true;
+try{ motionOn = !matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+try{ const v = localStorage.getItem(MOTION_KEY); if(v==='1') motionOn = true; else if(v==='0') motionOn = false; }catch(e){}
+const motionChks = Array.from(document.querySelectorAll('.motion-chk'));
+function setMotion(on, save){
+  motionOn = on;
+  document.documentElement.classList.toggle('motion-off', !on);
+  motionChks.forEach(c=>{ c.checked = on; });
+  if(save) try{ localStorage.setItem(MOTION_KEY, on ? '1' : '0'); }catch(e){}
+}
+motionChks.forEach(c=>c.addEventListener('change', ()=>setMotion(c.checked, true)));
+setMotion(motionOn, false);
+
+const cover = $('#cover');
+document.body.classList.add('cover-open');
+$('#startBtn').addEventListener('click', ()=>{
+  ensureAudio();   // the start tap also unlocks sound for the rest of the session
+  document.body.classList.remove('cover-open');
+  if(motionOn){
+    // The cover opens like a notebook: two clipped copies slide apart over the page that is already drawn underneath.
+    const wrap = $('.wrap');
+    const leaves = ['open-l','open-r'].map((cls,i)=>{
+      const c = cover.cloneNode(true);
+      ['id','role','aria-modal','aria-labelledby'].forEach(a=>c.removeAttribute(a));
+      c.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+      c.setAttribute('aria-hidden','true'); c.inert = true;
+      c.classList.add('leaf');
+      c.style.clipPath = i ? 'inset(0 0 0 50%)' : 'inset(0 50% 0 0)';
+      document.body.appendChild(c);
+      return {c, cls};
+    });
+    wrap.classList.add('enter');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>leaves.forEach(l=>l.c.classList.add(l.cls))));
+    setTimeout(()=>leaves.forEach(l=>l.c.remove()), 750);
+    setTimeout(()=>wrap.classList.remove('enter'), 1200);
+  }
+  cover.hidden = true;
+  render();
+});
+$('#startBtn').focus();
+requestAnimationFrame(()=>el.glider.classList.add('ready'));   // the first placement of the tab pill should not animate
+
+/* ---------- theme & resize ---------- */
+let lastW = 0;
+new ResizeObserver(()=>{ const w = el.paper.clientWidth; if(Math.abs(w-lastW)>2){ lastW = w; render(); } }).observe(el.paper);
+try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render); }catch(e){}
+new MutationObserver(render).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+
+refresh();
+})();
+</script>

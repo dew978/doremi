@@ -1273,7 +1273,6 @@ const INSTR = {
       vib.connect(vg); vg.connect(o.frequency); vib.start(t); vib.stop(end + 0.02);
     }
     const bg = gainNode(0.5, env); const bb = biq('bandpass', f, 10); bb.connect(bg); noise(t, end + 0.02, bb);
-    const hg = gainNode(0.012, env); const hh = biq('highpass', 3000, 0.7); hh.connect(hg); noise(t, end + 0.02, hh);
     const cg = gainNode(0, lp); const cb = biq('bandpass', Math.min(9000, f*3), 2); cb.connect(cg);
     noise(t, Math.min(end, t+0.06), cb);
     cg.gain.setValueAtTime(0, t); cg.gain.linearRampToValueAtTime(0.22, t+0.004); cg.gain.setTargetAtTime(0, t+0.004, 0.012);
@@ -1311,14 +1310,16 @@ const DRUM = {
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.13*v, t+0.001); g.gain.exponentialRampToValueAtTime(0.001, t+0.05);
   }
 };
-function scheduleDrums(dest, t0, lengthU, s){
-  const CAP = cap(), P = DRUMS[S.meter];
+// Drum hits for the whole piece as schedule items (t = seconds from the start of the music)
+function drumItems(lengthU, s){
+  const CAP = cap(), P = DRUMS[S.meter], six = S.meter==='6/8', items = [];
   for(let bar=0; bar*CAP < lengthU; bar++){
-    const b0 = t0 + bar*CAP*s;
-    P.K.forEach(p=>DRUM.kick(dest, b0 + p*s, p===0 ? 1 : 0.8));
-    P.S.forEach(p=>DRUM.snare(dest, b0 + p*s, 1));
-    P.H.forEach(p=>DRUM.hat(dest, b0 + p*s, (S.meter==='6/8' ? p%6===0 : p%4===0) ? 1 : 0.6));
+    const b0 = bar*CAP*s;
+    P.K.forEach(p=>items.push({t:b0 + p*s, go:(pl,at)=>DRUM.kick(pl.drumBus, at, p===0 ? 1 : 0.8)}));
+    P.S.forEach(p=>items.push({t:b0 + p*s, go:(pl,at)=>DRUM.snare(pl.drumBus, at, 1)}));
+    P.H.forEach(p=>items.push({t:b0 + p*s, go:(pl,at)=>DRUM.hat(pl.drumBus, at, (six ? p%6===0 : p%4===0) ? 1 : 0.6)}));
   }
+  return items;
 }
 const sixteenth = () => 60 / S.bpm / 4;
 // Several simultaneous tones share one gain so a chord is not louder than it should be
@@ -1342,31 +1343,47 @@ async function play(){
   if(S.inst==='piano'){ starting = true; try{ await loadPiano(); } finally { starting = false; } }
   if(playState) return;
   sel = null; tool = null;
-  const s = sixteenth(), CAP = cap();
+  const s = sixteenth(), CAP = cap(), inst = S.inst;
   const bus = ac.createGain(); bus.connect(master);
   const t0 = ac.currentTime + 0.15;
-  const events = []; let pos = 0;   // pos in 16th units — exact integer grid, no drift
+  // Build the whole piece as a time-ordered list first. Nothing sounds yet: pump() hands the items to the
+  // audio clock a little ahead of time, so a long piece full of chords never floods the audio engine at once.
+  const events = [], items = []; let pos = 0;   // pos in 16th units — exact integer grid, no drift
   for(let b=0;b<=last;b++){
     let u = 0;
     S.bars[b].forEach((n,i)=>{
-      events.push({t:pos*s, end:(pos+n.d)*s, bar:b, idx:i});
-      const ps = pitchesOf(n), dest = chordBus(bus, ps.length);
-      ps.forEach(q=>INSTR[S.inst](dest, mtof(q.m), t0 + pos*s, t0 + (pos+n.d)*s));
+      const start = pos*s, len = n.d*s, ms = pitchesOf(n).map(q=>q.m);
+      events.push({t:start, end:start+len, bar:b, idx:i});
+      if(ms.length) items.push({t:start, go:(pl,at)=>{ const dest = chordBus(pl.bus, ms.length); ms.forEach(m=>INSTR[inst](dest, mtof(m), at, at+len)); }});
       pos += n.d; u += n.d;
     });
     if(u<CAP){ events.push({t:pos*s, end:(pos+CAP-u)*s, bar:b, idx:-1}); pos += CAP-u; }
   }
   const bu = S.meter==='6/8' ? 2 : 4;   // metronome: ♩ for x/4, ♪ for 6/8
   if(S.metro) for(let p=0; p<pos; p+=bu){
-    const inBar = p % CAP;
-    click(bus, t0 + p*s, inBar===0 ? 2 : (S.meter==='6/8' && inBar===6) ? 1 : 0);
+    const inBar = p % CAP, level = inBar===0 ? 2 : (S.meter==='6/8' && inBar===6) ? 1 : 0;
+    items.push({t:p*s, go:(pl,at)=>click(pl.bus, at, level)});
   }
+  drumItems(pos, s).forEach(it=>items.push(it));
+  items.sort((a,b)=>a.t-b.t);
   const drumBus = gainNode(S.drums ? 1 : 0, bus);
-  scheduleDrums(drumBus, t0, pos, s);
-  playState = {bus, drumBus, t0, total:pos*s, events, beat:bu*s, barLen:CAP*s};
+  playState = {bus, drumBus, t0, total:pos*s, events, beat:bu*s, barLen:CAP*s, items, next:0, timer:0};
   playing = null;
+  pump();
+  playState.timer = setInterval(pump, PUMP_MS);
   refresh();
   tick();
+}
+// Each item still gets its exact start time on the audio clock (t0 + t), so timing is as strict as before;
+// only the moment it is handed over changes. AHEAD is longer than a background tab's 1 s timer throttle.
+const AHEAD = 1.5, PUMP_MS = 200;
+function pump(){
+  const P = playState; if(!P) return;
+  const horizon = ac.currentTime - P.t0 + AHEAD;
+  while(P.next < P.items.length && P.items[P.next].t <= horizon){
+    const it = P.items[P.next++];
+    it.go(P, P.t0 + it.t);
+  }
 }
 function tick(){
   if(!playState) return;
@@ -1386,6 +1403,7 @@ function tick(){
 function stop(finished){
   if(!playState) return;
   cancelAnimationFrame(raf);
+  clearInterval(playState.timer);
   const bus = playState.bus, now = ac.currentTime;
   bus.gain.cancelScheduledValues(now);
   bus.gain.setValueAtTime(bus.gain.value, now);
